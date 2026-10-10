@@ -44,20 +44,30 @@ export async function requestLoginCode(email: string, ip: string | null): Promis
   }
 
   const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
-  await db.insert(loginCodes).values({
-    email,
-    codeHash: hashCode(email, code),
-    expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000),
-    requestIp: ip,
-  });
+  const [row] = await db
+    .insert(loginCodes)
+    .values({
+      email,
+      codeHash: hashCode(email, code),
+      expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000),
+      requestIp: ip,
+    })
+    .returning({ id: loginCodes.id });
 
-  await sendEmail({
-    to: email,
-    subject: `Your Chronicles login code: ${code}`,
-    text:
-      `Your login code is ${code}\n\n` +
-      `It expires in ${CODE_TTL_MINUTES} minutes. If you didn't request it, you can ignore this email.`,
-  });
+  try {
+    await sendEmail({
+      to: email,
+      subject: `Your Chronicles login code: ${code}`,
+      text:
+        `Your login code is ${code}\n\n` +
+        `It expires in ${CODE_TTL_MINUTES} minutes. If you didn't request it, you can ignore this email.`,
+    });
+  } catch (err) {
+    console.error("Failed to send login code", err);
+    // The code never reached anyone, so don't count it against the rate limit.
+    await db.delete(loginCodes).where(eq(loginCodes.id, row.id));
+    return { ok: false, error: "We couldn't send the email just now. Please try again later." };
+  }
   return { ok: true };
 }
 
