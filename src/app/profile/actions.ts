@@ -52,6 +52,6 @@ export async function removeCharacterAction(_prev: EditState, formData: FormData
 
 function linkedMessage(prefix: string, linked: number) {
   return linked > 0
-    ? `${prefix} ${linked} chronicle${linked === 1 ? "" : "s"} from the old site ${linked === 1 ? "is" : "are"} linked to your account.`
+    ? `${prefix} ${linked} chronicle${linked === 1 ? "" : "s"} ${linked === 1 ? "is" : "are"} linked to your account.`
     : prefix;
 }

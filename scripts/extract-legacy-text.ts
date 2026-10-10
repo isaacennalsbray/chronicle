@@ -158,7 +158,14 @@ async function extract(url: string): Promise<string> {
   const lines: Line[] = [];
   const wobbly = await isWobbly(pdf);
   for (let n = 1; n <= pdf.numPages; n++) lines.push(...(await pageLines(pdf, n, wobbly)));
-  return paragraphs(lines, wobbly).join("\n\n").trim();
+  return (
+    paragraphs(lines, wobbly)
+      .join("\n\n")
+      // Some PDFs contain invisible control characters (even nulls) the database won't store.
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, "")
+      .toWellFormed()
+      .trim()
+  );
 }
 
 async function main() {

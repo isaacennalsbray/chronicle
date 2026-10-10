@@ -5,6 +5,9 @@ import type { Chronicle } from "@/db/schema";
 
 const { leagues, seasons, sessions, chronicles } = schema;
 
+// Newest season first: by the number in its label ("S14" → 14).
+const seasonNumber = sql`coalesce(substring(${seasons.label} from '[0-9]+')::int, 0)`;
+
 const chronicleWithContext = {
   chronicle: chronicles,
   session: sessions,
@@ -33,7 +36,7 @@ export async function listLeaguesWithSeasons() {
     .select({ league: leagues, season: seasons })
     .from(leagues)
     .leftJoin(seasons, eq(seasons.leagueId, leagues.id))
-    .orderBy(asc(leagues.sortOrder), desc(seasons.createdAt));
+    .orderBy(asc(leagues.sortOrder), desc(seasonNumber), desc(seasons.createdAt));
 
   const byLeague = new Map<number, { league: typeof leagues.$inferSelect; seasons: (typeof seasons.$inferSelect)[] }>();
   for (const { league, season } of rows) {
@@ -115,7 +118,7 @@ export async function listSessionOptions() {
     .from(sessions)
     .innerJoin(seasons, eq(sessions.seasonId, seasons.id))
     .innerJoin(leagues, eq(seasons.leagueId, leagues.id))
-    .orderBy(asc(leagues.sortOrder), desc(seasons.createdAt), asc(sessions.sortOrder), asc(sessions.id));
+    .orderBy(asc(leagues.sortOrder), desc(seasonNumber), desc(seasons.createdAt), asc(sessions.sortOrder), asc(sessions.id));
 }
 
 /**
