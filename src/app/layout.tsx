@@ -23,23 +23,27 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <header className="border-b border-border">
-          <nav className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-4 text-sm">
-            <Link href="/" className="mr-auto text-lg font-semibold">
+          <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-4 text-sm">
+            <Link href="/" className="text-lg font-semibold">
               Falnorian Chronicles
             </Link>
-            {user && <Link href="/submit" className="link">Submit</Link>}
-            {user && <Link href="/me" className="link">My chronicles</Link>}
-            {user?.isAdmin && <Link href="/admin" className="link">Admin</Link>}
-            {user ? (
-              <>
-                <form action={logout}>
-                  <button className="link">Log out</button>
-                </form>
-                <span className="text-muted" title="Logged in as">{user.email}</span>
-              </>
-            ) : (
-              <Link href="/login" className="link">Log in</Link>
-            )}
+            {/* One group, so the email always stays after the buttons even when the header wraps. */}
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+              {user && <Link href="/submit" className="link">Submit</Link>}
+              {user && <Link href="/me" className="link">My chronicles</Link>}
+              {user && <Link href="/profile" className="link">Profile</Link>}
+              {user?.isAdmin && <Link href="/admin" className="link">Admin</Link>}
+              {user ? (
+                <>
+                  <form action={logout}>
+                    <button className="link">Log out</button>
+                  </form>
+                  <span className="text-muted" title="Logged in as">{user.email}</span>
+                </>
+              ) : (
+                <Link href="/login" className="link">Log in</Link>
+              )}
+            </div>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
