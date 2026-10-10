@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { needsProfile, requireUser } from "@/lib/auth";
 import { chronicleCountsByCharacter } from "@/lib/profile";
-import { AddCharacterForm, CharacterRow, PlayerNameForm } from "./profile-editor";
+import { AddCharacterForm, CharacterRow } from "./profile-editor";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -37,7 +37,10 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profile"
         <p className="mt-1 text-sm text-muted">{user.email}</p>
       </div>
 
-      <PlayerNameForm playerName={user.playerName ?? ""} />
+      <div>
+        <p className="label">Real name</p>
+        <p>{user.playerName}</p>
+      </div>
 
       <section>
         <h2 className="label">Characters</h2>

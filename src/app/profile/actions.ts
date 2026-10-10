@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { addCharacter, removeCharacter, saveProfile, setPlayerName } from "@/lib/profile";
+import { addCharacter, removeCharacter, saveProfile } from "@/lib/profile";
 
 export type ProfileState = { error?: string };
 
 export async function updateProfile(_prev: ProfileState, formData: FormData): Promise<ProfileState> {
   const user = await requireUser();
-  const playerName = String(formData.get("playerName") ?? "").trim().slice(0, 100);
+  // The real name can only be set once; after that it stays fixed.
+  const playerName = user.playerName ?? String(formData.get("playerName") ?? "").trim().slice(0, 100);
   const characters = formData
     .getAll("character")
     .map((c) => String(c).trim().slice(0, 100))
@@ -27,15 +28,6 @@ export async function updateProfile(_prev: ProfileState, formData: FormData): Pr
 }
 
 export type EditState = { error?: string; message?: string };
-
-export async function updatePlayerName(_prev: EditState, formData: FormData): Promise<EditState> {
-  const user = await requireUser();
-  const playerName = String(formData.get("playerName") ?? "").trim().slice(0, 100);
-  if (!playerName) return { error: "Enter your real name." };
-  const linked = await setPlayerName(user.id, playerName);
-  revalidatePath("/", "layout");
-  return { message: linkedMessage("Saved.", linked) };
-}
 
 export async function addCharacterAction(_prev: EditState, formData: FormData): Promise<EditState> {
   const user = await requireUser();

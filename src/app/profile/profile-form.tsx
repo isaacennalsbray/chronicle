@@ -21,10 +21,18 @@ export function ProfileForm({
   return (
     <form action={action} className="mt-6 space-y-5">
       <input type="hidden" name="next" value={next} />
-      <div>
-        <label htmlFor="playerName" className="label">Real name</label>
-        <input id="playerName" name="playerName" required maxLength={100} defaultValue={playerName} className="input" />
-      </div>
+      {playerName ? (
+        <div>
+          <p className="label">Real name</p>
+          <p>{playerName}</p>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="playerName" className="label">Real name</label>
+          <input id="playerName" name="playerName" required maxLength={100} className="input" />
+          <p className="mt-1 text-sm text-muted">This can&apos;t be changed later, so check it&apos;s right.</p>
+        </div>
+      )}
       <fieldset className="space-y-2">
         <legend className="label">Character names</legend>
         {rows.map((row, i) => (

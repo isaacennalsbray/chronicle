@@ -1,26 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
-import { addCharacterAction, type EditState, removeCharacterAction, updatePlayerName } from "./actions";
+import { addCharacterAction, type EditState, removeCharacterAction } from "./actions";
 
 function Feedback({ state }: { state: EditState }) {
   if (state.error) return <p className="text-sm text-red-600">{state.error}</p>;
   if (state.message) return <p className="text-sm text-muted">{state.message}</p>;
   return null;
-}
-
-export function PlayerNameForm({ playerName }: { playerName: string }) {
-  const [state, action, pending] = useActionState<EditState, FormData>(updatePlayerName, {});
-  return (
-    <form action={action} className="space-y-2">
-      <label htmlFor="playerName" className="label">Real name</label>
-      <div className="flex gap-2">
-        <input id="playerName" name="playerName" required maxLength={100} defaultValue={playerName} className="input" />
-        <button className="btn-secondary" disabled={pending}>Save</button>
-      </div>
-      <Feedback state={state} />
-    </form>
-  );
 }
 
 export function CharacterRow({ name, chronicleCount }: { name: string; chronicleCount: number }) {
