@@ -27,6 +27,9 @@ export default async function MyChroniclesPage() {
                 <p className="text-sm text-muted">
                   {seasonTitle(season, league)} · {sessionLabel(session)}
                 </p>
+                {chronicle.status === "rejected" && chronicle.rejectionReason && (
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-rejected-fg">Reason: {chronicle.rejectionReason}</p>
+                )}
               </div>
               <StatusBadge status={chronicle.status} />
             </li>

@@ -5,8 +5,8 @@ import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { byline, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
-import { approveChronicle, rejectChronicle } from "./actions";
 import { DeleteButton } from "./delete-button";
+import { ReviewControls } from "./review-controls";
 
 type Props = PageProps<"/chronicles/[id]">;
 
@@ -47,6 +47,11 @@ export default async function ChroniclePage({ params }: Props) {
         <div className="mb-6 rounded-md bg-rejected-bg px-4 py-3 text-sm text-rejected-fg">
           <strong>Not approved.</strong> An admin decided not to publish this chronicle. Only the author and admins can
           see it.
+          {chronicle.rejectionReason && (
+            <p className="mt-2 whitespace-pre-wrap">
+              <strong>Reason:</strong> {chronicle.rejectionReason}
+            </p>
+          )}
         </div>
       )}
 
@@ -63,20 +68,13 @@ export default async function ChroniclePage({ params }: Props) {
         <a href={`${canonical}/download`} className="btn">
           Download {isLegacyImage ? "image" : "PDF"}
         </a>
-        {(pending || rejected) && user?.isAdmin && (
-          <form action={approveChronicle}>
-            <input type="hidden" name="id" value={chronicle.id} />
-            <button className="btn-secondary">Approve</button>
-          </form>
-        )}
-        {pending && user?.isAdmin && (
-          <form action={rejectChronicle}>
-            <input type="hidden" name="id" value={chronicle.id} />
-            <button className="btn-secondary">Reject</button>
-          </form>
-        )}
         {user?.isAdmin && <DeleteButton id={chronicle.id} title={chronicle.title} />}
       </div>
+      {(pending || rejected) && user?.isAdmin && (
+        <div className="mt-4">
+          <ReviewControls id={chronicle.id} canReject={pending} />
+        </div>
+      )}
 
       <div className="mt-8">
         {chronicle.legacyFileUrl ? (

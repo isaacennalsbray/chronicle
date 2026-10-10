@@ -18,7 +18,7 @@ export async function approveChronicle(formData: FormData) {
   // Approving also works on a previously rejected chronicle.
   const [approved] = await db
     .update(chronicles)
-    .set({ status: "approved", approvedAt: new Date(), rejectedAt: null })
+    .set({ status: "approved", approvedAt: new Date(), rejectedAt: null, rejectionReason: null })
     .where(and(eq(chronicles.id, id), ne(chronicles.status, "approved")))
     .returning({ id: chronicles.id, slug: chronicles.slug });
 
@@ -52,9 +52,10 @@ export async function rejectChronicle(formData: FormData) {
   const id = parseChronicleId(String(formData.get("id") ?? ""));
   if (!id) return;
 
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000);
   await db
     .update(chronicles)
-    .set({ status: "rejected", rejectedAt: new Date() })
+    .set({ status: "rejected", rejectedAt: new Date(), rejectionReason: reason || null })
     .where(and(eq(chronicles.id, id), eq(chronicles.status, "pending")));
 
   redirect("/admin");
