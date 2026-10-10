@@ -3,20 +3,29 @@
 import { useActionState } from "react";
 import { type LoginState, requestCode, restartLogin, verifyCode } from "./actions";
 
-export function LoginForm({ pendingEmail, next }: { pendingEmail: string | null; next: string }) {
+export function LoginForm({
+  pendingEmail,
+  next,
+  adminOnly,
+}: {
+  pendingEmail: string | null;
+  next: string;
+  adminOnly: boolean;
+}) {
   const [requestState, requestAction, requesting] = useActionState<LoginState, FormData>(requestCode, {});
   const [verifyState, verifyAction, verifying] = useActionState<LoginState, FormData>(verifyCode, {});
 
   if (!pendingEmail) {
     return (
       <form action={requestAction} className="space-y-4">
+        {adminOnly && <input type="hidden" name="admin" value="1" />}
         <div>
           <label htmlFor="email" className="label">Email</label>
           <input id="email" name="email" type="email" autoComplete="email" required autoFocus className="input" />
         </div>
         {requestState.error && <p className="text-sm text-red-600">{requestState.error}</p>}
         <button className="btn w-full" disabled={requesting}>
-          {requesting ? "Sending…" : "Email me a code"}
+          {requesting ? "Sending…" : adminOnly ? "Email me a passcode" : "Email me a code"}
         </button>
       </form>
     );
@@ -49,6 +58,7 @@ export function LoginForm({ pendingEmail, next }: { pendingEmail: string | null;
         </button>
       </form>
       <form action={restartLogin}>
+        {adminOnly && <input type="hidden" name="admin" value="1" />}
         <button className="link text-sm">Use a different email or send a new code</button>
       </form>
     </div>

@@ -66,8 +66,10 @@ export async function requireUser(): Promise<CurrentUser> {
   return user;
 }
 
+export const ADMIN_SIGN_IN_PATH = "/login?admin=1&next=%2Fadmin";
+
 export async function requireAdmin(): Promise<CurrentUser> {
-  const user = await requireUser();
-  if (!user.isAdmin) redirect("/");
+  const user = await getCurrentUser();
+  if (!user?.isAdmin) redirect(ADMIN_SIGN_IN_PATH);
   return user;
 }

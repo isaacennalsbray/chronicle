@@ -37,10 +37,12 @@ export default async function MyChroniclesPage() {
   );
 }
 
-function StatusBadge({ status }: { status: "pending" | "approved" }) {
-  return status === "pending" ? (
-    <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-xs text-warning-fg">Pending review</span>
-  ) : (
-    <span className="shrink-0 text-xs text-muted">Published</span>
-  );
+function StatusBadge({ status }: { status: "pending" | "approved" | "rejected" }) {
+  if (status === "pending") {
+    return <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-xs text-warning-fg">Pending review</span>;
+  }
+  if (status === "rejected") {
+    return <span className="shrink-0 rounded-full bg-rejected-bg px-2 py-0.5 text-xs text-rejected-fg">Not approved</span>;
+  }
+  return <span className="shrink-0 text-xs text-muted">Published</span>;
 }

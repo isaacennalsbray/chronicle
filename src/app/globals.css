@@ -10,6 +10,8 @@
   --accent-foreground: #ffffff;
   --warning-bg: #fff4d6;
   --warning-fg: #6b4a00;
+  --rejected-bg: #fbe4e1;
+  --rejected-fg: #8a2318;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +25,8 @@
     --accent-foreground: #16130f;
     --warning-bg: #3a2e10;
     --warning-fg: #f3d58a;
+    --rejected-bg: #3d1a16;
+    --rejected-fg: #f2b0a6;
   }
 }
 
@@ -36,6 +40,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-warning-bg: var(--warning-bg);
   --color-warning-fg: var(--warning-fg);
+  --color-rejected-bg: var(--rejected-bg);
+  --color-rejected-fg: var(--rejected-fg);
   --font-sans: var(--font-geist);
   --font-serif: var(--font-source-serif);
 }

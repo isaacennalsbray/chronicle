@@ -40,6 +40,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
+        <footer className="border-t border-border">
+          <div className="mx-auto max-w-3xl px-4 py-4 text-right text-xs">
+            <Link href="/admin" className="text-muted hover:underline">Admin</Link>
+          </div>
+        </footer>
       </body>
     </html>
   );
