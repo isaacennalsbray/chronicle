@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { byline, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { approveChronicle, rejectChronicle } from "./actions";
+import { DeleteButton } from "./delete-button";
 
 type Props = PageProps<"/chronicles/[id]">;
 
@@ -74,6 +75,7 @@ export default async function ChroniclePage({ params }: Props) {
             <button className="btn-secondary">Reject</button>
           </form>
         )}
+        {user?.isAdmin && <DeleteButton id={chronicle.id} title={chronicle.title} />}
       </div>
 
       <div className="mt-8">
