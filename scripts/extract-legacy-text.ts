@@ -5,6 +5,7 @@
  *
  *   npm run extract:legacy-text -- --dry-run   # print the first lines of each, write nothing
  *   npm run extract:legacy-text
+ *   npm run extract:legacy-text -- --redo      # re-extract chronicles that already have text
  */
 import { config } from "dotenv";
 import { extractText, getDocumentProxy } from "unpdf";
@@ -14,7 +15,8 @@ config({ path: ".env.local" });
 /**
  * PDF text comes out hard-wrapped at the original column width. Join wrapped lines back into
  * paragraphs: a line that runs close to the full column width continues on the next line,
- * while shorter lines (headings, paragraph ends) keep their break.
+ * while shorter lines (headings, paragraph ends) end a paragraph. Paragraphs are separated by a
+ * blank line so they read as paragraphs on the site.
  */
 function reflow(pageText: string): string {
   const lines = pageText.split("\n").map((l) => l.trim());
@@ -27,13 +29,14 @@ function reflow(pageText: string): string {
     const prev = lines[i - 1];
     const wrapped = prev.length >= width * 0.75 && !/[.!?:"”]$/.test(prev) && line !== "";
     const continues = prev.length >= width * 0.75 && line !== "" && /^[a-z(]/.test(line);
-    out += (wrapped || continues ? " " : "\n") + line;
+    out += (wrapped || continues ? " " : "\n\n") + line;
   });
-  return out.replace(/-\s(?=[a-z])/g, "-").trim();
+  return out.replace(/-\s(?=[a-z])/g, "-").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
+  const redo = process.argv.includes("--redo");
   const { and, eq, isNull, isNotNull, like } = await import("drizzle-orm");
   const { db, schema } = await import("../src/db");
   const { chronicles } = schema;
@@ -44,7 +47,7 @@ async function main() {
     .where(
       and(
         isNotNull(chronicles.legacyFileUrl),
-        isNull(chronicles.bodyText),
+        redo ? undefined : isNull(chronicles.bodyText),
         like(chronicles.legacyFileContentType, "application/pdf%"),
       ),
     );
