@@ -6,6 +6,7 @@ import { chronicleLabels, getSeason, getSeasonListing, seasonTitle, sessionLabel
 import { chroniclePath } from "@/lib/slug";
 import { DeleteSeasonButton } from "./delete-season-button";
 import { DeleteSessionButton } from "./delete-session-button";
+import { SessionDescription } from "./session-description";
 
 type Props = PageProps<"/leagues/[league]/[season]">;
 
@@ -55,6 +56,11 @@ export default async function SeasonPage({ params }: Props) {
                   </Link>
                 </div>
               </div>
+              <SessionDescription
+                sessionId={session.id}
+                description={session.description}
+                isAdmin={user?.isAdmin ?? false}
+              />
               {chronicles.length === 0 ? (
                 <p className="mt-2 text-sm text-muted">No chronicles yet.</p>
               ) : (
