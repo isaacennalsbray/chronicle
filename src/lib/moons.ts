@@ -22,7 +22,7 @@ export function realDateFromInGameDate(inGameDate: string, year: number): string
   const m = /(\d{1,2})(?:st|nd|rd|th)?\s+of\s+([a-z]+moon)/i.exec(inGameDate);
   if (!m) return null;
   const day = Number(m[1]);
-  const month = MOONS.indexOf(m[2].toLowerCase());
+  const month = MOONS.indexOf(m[2].toLowerCase().replace(/^eigthmoon$/, "eighthmoon")); // common typo
   if (month === -1) return null;
 
   const date = new Date(Date.UTC(year, month, day));

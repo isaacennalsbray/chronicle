@@ -24,8 +24,7 @@ export default async function MyChroniclesPage({ searchParams }: PageProps<"/me"
       </p>
       {typeof linked === "string" && Number(linked) > 0 && (
         <p className="mt-4 rounded-md bg-surface px-4 py-3 text-sm">
-          {linked} chronicle{linked === "1" ? "" : "s"} from the old site {linked === "1" ? "is" : "are"} now linked to
-          your account.
+          {linked} chronicle{linked === "1" ? "" : "s"} {linked === "1" ? "is" : "are"} now linked to your account.
         </p>
       )}
       {rows.length === 0 ? (
