@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
-import { byline, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
+import { chronicleLabels, distinctTitle, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { DeleteButton } from "./delete-button";
 import { ReviewControls } from "./review-controls";
@@ -15,19 +15,21 @@ async function load(param: string) {
   const row = id ? await getChronicleById(id) : null;
   const user = await getCurrentUser();
   if (!row || !canView(row.chronicle, user)) return null;
-  return { ...row, user };
+  const label = (await chronicleLabels([row.chronicle])).get(row.chronicle.id)!;
+  return { ...row, user, label };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const row = await load((await params).id);
-  return { title: row?.chronicle.title };
+  return { title: row?.label };
 }
 
 export default async function ChroniclePage({ params }: Props) {
   const { id: param } = await params;
   const row = await load(param);
   if (!row) notFound();
-  const { chronicle, session, season, league, user } = row;
+  const { chronicle, session, season, league, user, label } = row;
+  const subtitle = distinctTitle(chronicle);
 
   const canonical = chroniclePath(chronicle);
   if (`/chronicles/${param}` !== canonical) redirect(canonical);
@@ -61,14 +63,14 @@ export default async function ChroniclePage({ params }: Props) {
         </Link>{" "}
         · {sessionLabel(session)}
       </p>
-      <h1 className="mt-2 font-serif text-4xl font-semibold">{chronicle.title}</h1>
-      {chronicle.title !== byline(chronicle) && <p className="mt-1 text-lg text-muted">{byline(chronicle)}</p>}
+      <h1 className="mt-2 font-serif text-4xl font-semibold">{label}</h1>
+      {subtitle && <p className="mt-1 text-lg text-muted">{subtitle}</p>}
 
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={`${canonical}/download`} className="btn">
           Download {isLegacyImage ? "image" : "PDF"}
         </a>
-        {user?.isAdmin && <DeleteButton id={chronicle.id} title={chronicle.title} />}
+        {user?.isAdmin && <DeleteButton id={chronicle.id} title={label} />}
       </div>
       {(pending || rejected) && user?.isAdmin && (
         <div className="mt-4">

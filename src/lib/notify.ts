@@ -1,7 +1,7 @@
 import "server-only";
 import { sendEmail } from "./email";
 import { adminEmails, appUrl } from "./env";
-import { byline, distinctTitle, listPendingChronicles, seasonTitle, sessionLabel } from "./queries";
+import { chronicleLabels, distinctTitle, listPendingChronicles, seasonTitle, sessionLabel } from "./queries";
 import { chroniclePath } from "./slug";
 
 /** Emails admins a digest of every chronicle currently awaiting approval. */
@@ -11,10 +11,11 @@ export async function sendPendingDigest() {
 
   const pending = await listPendingChronicles();
   if (pending.length === 0) return;
+  const labels = await chronicleLabels(pending.map((p) => p.chronicle));
 
   const lines = pending.map(
     ({ chronicle, session, season, league }) =>
-      `- ${byline(chronicle)}${distinctTitle(chronicle) ? ` — ${chronicle.title}` : ""}\n` +
+      `- ${labels.get(chronicle.id)}${distinctTitle(chronicle) ? ` — ${chronicle.title}` : ""}\n` +
       `  ${seasonTitle(season, league)}, ${sessionLabel(session)}\n` +
       `  ${appUrl()}${chroniclePath(chronicle)}`,
   );

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { byline, distinctTitle, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
+import { chronicleLabels, distinctTitle, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 import { DeleteSeasonButton } from "./delete-season-button";
 import { DeleteSessionButton } from "./delete-session-button";
@@ -22,6 +22,7 @@ export default async function SeasonPage({ params }: Props) {
   const { league, season } = found;
   const user = await getCurrentUser();
   const listing = await getSeasonListing(season.id, user?.id ?? null);
+  const labels = await chronicleLabels(listing.flatMap((l) => l.chronicles));
 
   return (
     <div>
@@ -62,7 +63,7 @@ export default async function SeasonPage({ params }: Props) {
                     const title = distinctTitle(c);
                     return (
                       <li key={c.id}>
-                        <Link href={chroniclePath(c)} className="link">{byline(c)}</Link>
+                        <Link href={chroniclePath(c)} className="link">{labels.get(c.id)}</Link>
                         {title && <span className="text-muted"> — {title}</span>}
                         {c.status === "pending" && (
                           <span className="ml-2 rounded-full bg-warning-bg px-2 py-0.5 text-xs text-warning-fg">
