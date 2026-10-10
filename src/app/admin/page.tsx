@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import {
-  byline,
+  chronicleLabels,
   distinctTitle,
   listLeaguesWithSeasons,
   listPendingChronicles,
@@ -18,6 +18,7 @@ export const metadata: Metadata = { title: "Admin" };
 export default async function AdminPage() {
   await requireAdmin();
   const [pending, leagues] = await Promise.all([listPendingChronicles(), listLeaguesWithSeasons()]);
+  const labels = await chronicleLabels(pending.map((p) => p.chronicle));
 
   return (
     <div className="space-y-12">
@@ -30,7 +31,7 @@ export default async function AdminPage() {
             {pending.map(({ chronicle, session, season, league }) => (
               <li key={chronicle.id} className="space-y-3 py-4">
                 <div>
-                  <Link href={chroniclePath(chronicle)} className="link font-medium">{byline(chronicle)}</Link>
+                  <Link href={chroniclePath(chronicle)} className="link font-medium">{labels.get(chronicle.id)}</Link>
                   {distinctTitle(chronicle) && <span className="text-muted"> — {chronicle.title}</span>}
                   <p className="text-sm text-muted">
                     {seasonTitle(season, league)} · {sessionLabel(session)} · submitted{" "}

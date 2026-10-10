@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { listChroniclesByAuthor, seasonTitle, sessionLabel } from "@/lib/queries";
+import { chronicleLabels, listChroniclesByAuthor, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 import { DismissButton } from "./dismiss-button";
 
@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "My chronicles" };
 export default async function MyChroniclesPage() {
   const user = await requireUser();
   const rows = await listChroniclesByAuthor(user.id);
+  const labels = await chronicleLabels(rows.map((r) => r.chronicle));
 
   return (
     <div>
@@ -24,7 +25,7 @@ export default async function MyChroniclesPage() {
           {rows.map(({ chronicle, session, season, league }) => (
             <li key={chronicle.id} className="flex items-baseline justify-between gap-4 py-3">
               <div>
-                <Link href={chroniclePath(chronicle)} className="link font-medium">{chronicle.title}</Link>
+                <Link href={chroniclePath(chronicle)} className="link font-medium">{labels.get(chronicle.id)}</Link>
                 <p className="text-sm text-muted">
                   {seasonTitle(season, league)} · {sessionLabel(session)}
                 </p>

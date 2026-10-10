@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Chronicle } from "@/db/schema";
 
@@ -147,10 +147,54 @@ export function byline(c: { characterName: string; playerName: string }) {
   return `${c.characterName} (${c.playerName})`;
 }
 
-/** The title, unless it just repeats the byline or character name. */
+/**
+ * The title, unless it just repeats the byline or character name (ignoring a trailing
+ * I/II, which chronicleLabels already shows).
+ */
 export function distinctTitle(c: { title: string; characterName: string; playerName: string }) {
   const redundant = [c.characterName, `${c.characterName} Chronicle`, byline(c)].map((t) => t.toLowerCase());
-  return redundant.includes(c.title.trim().toLowerCase()) ? null : c.title;
+  const title = c.title.trim().replace(/\s+[IVX]+$/, "").toLowerCase();
+  return redundant.includes(title) ? null : c.title;
+}
+
+type Labelable = Pick<Chronicle, "id" | "sessionId" | "characterName" | "playerName">;
+
+/**
+ * Display labels like "Bartholomew (Tobin)", numbered "Bartholomew (Tobin) I" / "… II" when
+ * one session has several chronicles with the same character and player. Numbering follows
+ * submission order among approved chronicles plus the ones passed in (so a pending one being
+ * reviewed is numbered too).
+ */
+export async function chronicleLabels(rows: Labelable[]): Promise<Map<number, string>> {
+  const labels = new Map(rows.map((c) => [c.id, byline(c)]));
+  if (rows.length === 0) return labels;
+
+  const sessionIds = [...new Set(rows.map((c) => c.sessionId))];
+  const ids = rows.map((c) => c.id);
+  const siblings = await db
+    .select({
+      id: chronicles.id,
+      sessionId: chronicles.sessionId,
+      characterName: chronicles.characterName,
+      playerName: chronicles.playerName,
+    })
+    .from(chronicles)
+    .where(and(inArray(chronicles.sessionId, sessionIds), or(eq(chronicles.status, "approved"), inArray(chronicles.id, ids))))
+    .orderBy(asc(chronicles.submittedAt), asc(chronicles.id));
+
+  const groups = new Map<string, number[]>();
+  for (const c of siblings) {
+    const key = `${c.sessionId}|${c.characterName.trim().toLowerCase()}|${c.playerName.trim().toLowerCase()}`;
+    groups.set(key, [...(groups.get(key) ?? []), c.id]);
+  }
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    group.forEach((id, i) => {
+      const row = rows.find((c) => c.id === id);
+      if (row) labels.set(id, `${byline(row)} ${ROMAN[i] ?? i + 1}`);
+    });
+  }
+  return labels;
 }
 
 export function formatPlayedOn(playedOn: string) {
