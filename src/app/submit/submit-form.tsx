@@ -19,20 +19,16 @@ export function SubmitForm({
 
   return (
     <form action={action} className="mt-6 space-y-5">
+      <div>
+        <label htmlFor="leagueId" className="label">League</label>
+        <select id="leagueId" name="leagueId" required defaultValue={v?.leagueId ?? defaultLeagueId} className="input">
+          <option value="" disabled>Choose a league…</option>
+          {leagues.map((l) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
+          ))}
+        </select>
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="leagueId" className="label">League</label>
-          <select id="leagueId" name="leagueId" required defaultValue={v?.leagueId ?? defaultLeagueId} className="input">
-            <option value="" disabled>Choose a league…</option>
-            {leagues.map((l) => (
-              <option key={l.id} value={l.id}>{l.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="playedOn" className="label">Date of the LARP event</label>
-          <input id="playedOn" name="playedOn" type="date" required defaultValue={v?.playedOn ?? defaultDate} className="input" />
-        </div>
         <div>
           <label htmlFor="characterName" className="label">Character name</label>
           <input id="characterName" name="characterName" required maxLength={100} defaultValue={v?.characterName} className="input" />
@@ -41,6 +37,10 @@ export function SubmitForm({
           <label htmlFor="playerName" className="label">Player name</label>
           <input id="playerName" name="playerName" required maxLength={100} defaultValue={v?.playerName ?? defaultPlayerName} className="input" />
         </div>
+      </div>
+      <div>
+        <label htmlFor="playedOn" className="label">Date of the LARP event</label>
+        <input id="playedOn" name="playedOn" type="date" required defaultValue={v?.playedOn ?? defaultDate} className="input" />
       </div>
       <div>
         <label htmlFor="bodyText" className="label">Chronicle</label>

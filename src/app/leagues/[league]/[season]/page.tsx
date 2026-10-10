@@ -30,35 +30,37 @@ export default async function SeasonPage({ params }: Props) {
       {listing.length === 0 && <p className="mt-6 text-muted">No sessions yet.</p>}
 
       <div className="mt-8 space-y-8">
-        {listing.map(({ session, chronicles }) => (
-          <section key={session.id}>
-            <h2 className="font-serif text-xl font-semibold">{sessionLabel(session)}</h2>
-            {chronicles.length === 0 ? (
-              <p className="mt-2 text-sm text-muted">
-                No chronicles yet.{" "}
-                {user ? (
-                  <Link href={`/submit?league=${league.slug}${session.playedOn ? `&date=${session.playedOn}` : ""}`} className="link">
-                    Submit one
-                  </Link>
-                ) : (
-                  <Link href="/login" className="link">Log in to submit one</Link>
-                )}
-              </p>
-            ) : (
-              <ul className="mt-2 space-y-1">
-                {chronicles.map((c) => {
-                  const title = distinctTitle(c);
-                  return (
-                    <li key={c.id}>
-                      <Link href={chroniclePath(c)} className="link">{byline(c)}</Link>
-                      {title && <span className="text-muted"> — {title}</span>}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        ))}
+        {listing.map(({ session, chronicles }) => {
+          const submitPath = `/submit?league=${league.slug}${session.playedOn ? `&date=${session.playedOn}` : ""}`;
+          return (
+            <section key={session.id}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                <h2 className="font-serif text-xl font-semibold">{sessionLabel(session)}</h2>
+                <Link
+                  href={user ? submitPath : `/login?next=${encodeURIComponent(submitPath)}`}
+                  className="link text-sm"
+                >
+                  {user ? "Submit a chronicle" : "Log in to submit"}
+                </Link>
+              </div>
+              {chronicles.length === 0 ? (
+                <p className="mt-2 text-sm text-muted">No chronicles yet.</p>
+              ) : (
+                <ul className="mt-2 space-y-1">
+                  {chronicles.map((c) => {
+                    const title = distinctTitle(c);
+                    return (
+                      <li key={c.id}>
+                        <Link href={chroniclePath(c)} className="link">{byline(c)}</Link>
+                        {title && <span className="text-muted"> — {title}</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
