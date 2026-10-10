@@ -2,14 +2,14 @@ import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { renderChroniclePdf } from "@/lib/pdf";
-import { byline, chronicleFileBase, chronicleNumber, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
+import { byline, chroniclePdfTitle, getChronicleById } from "@/lib/queries";
 import { parseChronicleId } from "@/lib/slug";
 
 export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/download">) {
   const id = parseChronicleId((await ctx.params).id);
   const row = id ? await getChronicleById(id) : null;
   if (!row || !canView(row.chronicle, await getCurrentUser())) notFound();
-  const { chronicle, session, season, league } = row;
+  const { chronicle, session } = row;
 
   // Imported chronicles: serve the original file untouched.
   if (chronicle.legacyFileUrl) {
@@ -18,13 +18,11 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
     redirect(url.toString());
   }
 
-  const eventDate = chronicle.eventDate ?? session.playedOn ?? chronicle.submittedAt.toISOString().slice(0, 10);
-  const fileBase = chronicleFileBase(eventDate, chronicle.playerName, await chronicleNumber(chronicle));
+  const fileBase = await chroniclePdfTitle(chronicle, session);
 
   const pdf = await renderChroniclePdf({
     documentTitle: fileBase,
     byline: byline(chronicle),
-    header: `${seasonTitle(season, league)} · ${sessionLabel(session)}`,
     body: chronicle.bodyText ?? "",
   });
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
-import { chronicleLabels, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
+import { chronicleLabels, chroniclePdfTitle, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { DeleteButton } from "./delete-button";
 import { ReviewControls } from "./review-controls";
@@ -34,6 +34,7 @@ export default async function ChroniclePage({ params }: Props) {
   if (`/chronicles/${param}` !== canonical) redirect(canonical);
 
   const isLegacyImage = chronicle.legacyFileContentType?.startsWith("image/");
+  const pdfTitle = await chroniclePdfTitle(chronicle, session);
   const pending = chronicle.status === "pending";
   const rejected = chronicle.status === "rejected";
 
@@ -77,6 +78,7 @@ export default async function ChroniclePage({ params }: Props) {
       )}
 
       <div className="mt-8">
+        <h2 className="mb-4 font-serif text-2xl font-semibold">{pdfTitle}</h2>
         {/* Text when we have it (new chronicles, and imported PDFs with extractable text);
             otherwise the original scan. */}
         {chronicle.bodyText ? (

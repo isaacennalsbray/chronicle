@@ -26,7 +26,7 @@ export function NewSessionForm({ seasons }: { seasons: { id: number; label: stri
       </div>
       <div>
         <label htmlFor="playedOn" className="label">Played on (optional)</label>
-        <input id="playedOn" name="playedOn" type="date" className="input" />
+        <input id="playedOn" name="playedOn" inputMode="numeric" placeholder="month/day/year" className="input" />
       </div>
       <div className="flex items-center gap-4 sm:col-span-3">
         <button className="btn" disabled={pending}>Add session</button>

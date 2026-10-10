@@ -36,8 +36,27 @@ export async function createSeason(_prev: AdminFormState, formData: FormData): P
 const NewSession = z.object({
   seasonId: z.coerce.number().int().positive({ error: "Choose a season." }),
   inGameDate: z.string().trim().min(1, "Enter the in-game date.").max(100),
-  playedOn: z.union([z.literal(""), z.iso.date()]),
+  // Typed as month/day/year, e.g. 10/9/2026.
+  playedOn: z
+    .string()
+    .trim()
+    .transform((value, ctx) => {
+      if (!value) return null;
+      const iso = isoFromMonthDayYear(value);
+      if (!iso) ctx.addIssue({ code: "custom", message: "Enter the date as month/day/year, e.g. 10/9/2026." });
+      return iso;
+    }),
 });
+
+/** "10/9/2026" → "2026-10-09", or null if it isn't a real date. */
+function isoFromMonthDayYear(value: string): string | null {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+  if (!m) return null;
+  const [month, day, year] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return date.toISOString().slice(0, 10);
+}
 
 export async function createSession(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   await requireAdmin();
@@ -55,7 +74,7 @@ export async function createSession(_prev: AdminFormState, formData: FormData): 
     .values({
       seasonId,
       inGameDate,
-      playedOn: playedOn || null,
+      playedOn,
       sortOrder: (last ?? 0) + 1,
     })
     .onConflictDoNothing()
