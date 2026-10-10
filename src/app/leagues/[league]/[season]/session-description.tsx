@@ -48,9 +48,25 @@ export function SessionDescription({
     <>
       {description && <p className="mt-2 whitespace-pre-wrap font-serif leading-relaxed">{description}</p>}
       {isAdmin && (
-        <button type="button" onClick={() => setEditing(true)} className="link mt-1 text-sm">
-          {description ? "Edit description" : "+ Add a description"}
-        </button>
+        <div className="mt-1 flex items-baseline gap-4 text-sm">
+          <button type="button" onClick={() => setEditing(true)} className="link">
+            {description ? "Edit description" : "+ Add a description"}
+          </button>
+          {description && (
+            // Saving an empty description removes it.
+            <form
+              action={action}
+              onSubmit={(e) => {
+                if (!confirm("Delete this session's description?")) e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="sessionId" value={sessionId} />
+              <input type="hidden" name="description" value="" />
+              <button className="text-red-600 hover:underline" disabled={pending}>Delete description</button>
+            </form>
+          )}
+          {state.error && <span className="text-red-600">{state.error}</span>}
+        </div>
       )}
     </>
   );
