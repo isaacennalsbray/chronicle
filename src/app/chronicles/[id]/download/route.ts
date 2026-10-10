@@ -18,8 +18,8 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
     redirect(url.toString());
   }
 
-  const playedOn = session.playedOn ?? chronicle.submittedAt.toISOString().slice(0, 10);
-  const fileBase = chronicleFileBase(playedOn, chronicle.playerName, await chronicleNumber(chronicle));
+  const eventDate = chronicle.eventDate ?? session.playedOn ?? chronicle.submittedAt.toISOString().slice(0, 10);
+  const fileBase = chronicleFileBase(eventDate, chronicle.playerName, await chronicleNumber(chronicle));
 
   const pdf = await renderChroniclePdf({
     documentTitle: fileBase,

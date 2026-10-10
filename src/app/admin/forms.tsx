@@ -1,31 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
-import { type AdminFormState, createSeason, createSession, setInGameDate } from "./actions";
+import { type AdminFormState, createSeason, createSession } from "./actions";
 
 function Status({ state, success }: { state: AdminFormState; success: string }) {
   if (state.error) return <p className="text-sm text-red-600">{state.error}</p>;
   if (state.ok) return <p className="text-sm text-muted">{success}</p>;
   return null;
-}
-
-export function InGameDateForm({ sessionId }: { sessionId: number }) {
-  const [state, action, pending] = useActionState<AdminFormState, FormData>(setInGameDate, {});
-  return (
-    <form action={action} className="mt-2 flex flex-wrap items-center gap-3">
-      <input type="hidden" name="sessionId" value={sessionId} />
-      <label htmlFor={`inGameDate-${sessionId}`} className="sr-only">In-game date</label>
-      <input
-        id={`inGameDate-${sessionId}`}
-        name="inGameDate"
-        required
-        placeholder="9th of Tenthmoon, 287.3.3"
-        className="input max-w-xs"
-      />
-      <button className="btn-secondary" disabled={pending}>Save</button>
-      <Status state={state} success="Saved." />
-    </form>
-  );
 }
 
 export function NewSessionForm({ seasons }: { seasons: { id: number; label: string }[] }) {
