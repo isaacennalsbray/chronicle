@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { listChroniclesByAuthor, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
+import { DismissButton } from "./dismiss-button";
 
 export const metadata: Metadata = { title: "My chronicles" };
 
@@ -31,7 +32,10 @@ export default async function MyChroniclesPage() {
                   <p className="mt-1 whitespace-pre-wrap text-sm text-rejected-fg">Reason: {chronicle.rejectionReason}</p>
                 )}
               </div>
-              <StatusBadge status={chronicle.status} />
+              <div className="flex shrink-0 items-baseline gap-3">
+                <StatusBadge status={chronicle.status} />
+                {chronicle.status === "rejected" && <DismissButton id={chronicle.id} />}
+              </div>
             </li>
           ))}
         </ul>
@@ -45,7 +49,7 @@ function StatusBadge({ status }: { status: "pending" | "approved" | "rejected" }
     return <span className="shrink-0 rounded-full bg-warning-bg px-2 py-0.5 text-xs text-warning-fg">Pending review</span>;
   }
   if (status === "rejected") {
-    return <span className="shrink-0 rounded-full bg-rejected-bg px-2 py-0.5 text-xs text-rejected-fg">Not approved</span>;
+    return <span className="shrink-0 rounded-full bg-rejected-bg px-2 py-0.5 text-xs text-rejected-fg">Rejected</span>;
   }
   return <span className="shrink-0 text-xs text-muted">Published</span>;
 }

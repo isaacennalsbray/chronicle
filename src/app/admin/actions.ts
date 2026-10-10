@@ -2,6 +2,7 @@
 
 import { count, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
@@ -83,4 +84,29 @@ export async function deleteSession(_prev: AdminFormState, formData: FormData): 
   revalidatePath("/leagues/[league]/[season]", "page");
   revalidatePath("/admin");
   return { ok: true };
+}
+
+export async function deleteSeason(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const seasonId = Number(formData.get("seasonId"));
+  if (!Number.isSafeInteger(seasonId) || seasonId <= 0) return { error: "Unknown season." };
+
+  const season = await db.query.seasons.findFirst({ where: eq(schema.seasons.id, seasonId) });
+  if (!season) return { error: "That season no longer exists." };
+  const league = await db.query.leagues.findFirst({ where: eq(schema.leagues.id, season.leagueId) });
+
+  // Counts hidden (pending/rejected) chronicles too, so nothing is lost with the season.
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(schema.chronicles)
+    .innerJoin(schema.sessions, eq(schema.chronicles.sessionId, schema.sessions.id))
+    .where(eq(schema.sessions.seasonId, seasonId));
+  if (n > 0) {
+    return { error: `This season still has ${n} chronicle${n === 1 ? "" : "s"}. Delete them first.` };
+  }
+
+  await db.delete(schema.sessions).where(eq(schema.sessions.seasonId, seasonId));
+  await db.delete(schema.seasons).where(eq(schema.seasons.id, seasonId));
+  revalidatePath("/", "layout");
+  redirect(league ? `/leagues/${league.slug}` : "/");
 }
