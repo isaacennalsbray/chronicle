@@ -3,6 +3,9 @@
 import { useActionState, useState } from "react";
 import { type SubmitState, submitChronicle } from "./actions";
 
+// Matches NEW_CHARACTER in ./actions.
+const NEW_CHARACTER = "__new__";
+
 type SessionOption = { id: number; leagueId: number; label: string; group: string };
 
 export function SubmitForm({
@@ -11,7 +14,6 @@ export function SubmitForm({
   defaultLeagueId,
   defaultSessionId,
   defaultYear,
-  defaultPlayerName,
   characters,
 }: {
   leagues: { id: number; name: string }[];
@@ -19,12 +21,12 @@ export function SubmitForm({
   defaultLeagueId: string;
   defaultSessionId: string;
   defaultYear: string;
-  defaultPlayerName: string;
   characters: string[];
 }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitChronicle, {});
   const v = state.values;
   const [leagueId, setLeagueId] = useState(v?.leagueId ?? defaultLeagueId);
+  const [character, setCharacter] = useState(v?.character ?? characters[0] ?? NEW_CHARACTER);
 
   // Sessions of the chosen league, grouped by season.
   const groups = new Map<string, SessionOption[]>();
@@ -87,28 +89,33 @@ export function SubmitForm({
           />
         </div>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="characterName" className="label">Character name</label>
+      <div className="space-y-2">
+        <label htmlFor="character" className="label">Character</label>
+        <select
+          id="character"
+          name="character"
+          required
+          value={character}
+          onChange={(e) => setCharacter(e.target.value)}
+          className="input"
+        >
+          {characters.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+          <option value={NEW_CHARACTER}>+ Add a new character…</option>
+        </select>
+        {character === NEW_CHARACTER && (
           <input
-            id="characterName"
-            name="characterName"
+            name="newCharacter"
+            aria-label="New character name"
             required
+            autoFocus
             maxLength={100}
-            list="my-characters"
-            defaultValue={v?.characterName ?? characters[0] ?? ""}
+            placeholder="New character name"
+            defaultValue={v?.newCharacter}
             className="input"
           />
-          <datalist id="my-characters">
-            {characters.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-        </div>
-        <div>
-          <label htmlFor="playerName" className="label">Player name</label>
-          <input id="playerName" name="playerName" required maxLength={100} defaultValue={v?.playerName ?? defaultPlayerName} className="input" />
-        </div>
+        )}
       </div>
       <div>
         <label htmlFor="bodyText" className="label">Chronicle</label>

@@ -20,7 +20,7 @@ export default async function MyChroniclesPage({ searchParams }: PageProps<"/me"
       <h1 className="font-serif text-3xl font-semibold">My chronicles</h1>
       <p className="mt-1 text-sm text-muted">
         {user.playerName} · {user.characters.join(", ")} ·{" "}
-        <Link href="/profile" className="link">Edit names</Link>
+        <Link href="/profile" className="link">Edit profile</Link>
       </p>
       {typeof linked === "string" && Number(linked) > 0 && (
         <p className="mt-4 rounded-md bg-surface px-4 py-3 text-sm">

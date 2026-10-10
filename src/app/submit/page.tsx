@@ -35,7 +35,6 @@ export default async function SubmitPage({ searchParams }: PageProps<"/submit">)
         defaultLeagueId={preselected ? String(preselected.leagueId) : ""}
         defaultSessionId={preselected ? String(preselected.id) : ""}
         defaultYear={String(new Date().getFullYear())}
-        defaultPlayerName={user.playerName ?? ""}
         characters={user.characters}
       />
     </div>
