@@ -14,7 +14,8 @@
     "import:legacy": "tsx scripts/import-legacy.ts",
     "extract:legacy-text": "tsx scripts/extract-legacy-text.ts",
     "backfill:legacy-dates": "tsx scripts/backfill-legacy-event-dates.ts",
-    "import:legacy-seasons": "tsx scripts/import-legacy-seasons.ts"
+    "import:legacy-seasons": "tsx scripts/import-legacy-seasons.ts",
+    "import:legacy-media": "tsx scripts/import-legacy-media.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
@@ -40,6 +41,8 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "jszip": "^3.10.2",
+    "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

@@ -34,6 +34,9 @@ export default async function ChroniclePage({ params }: Props) {
   if (`/chronicles/${param}` !== canonical) redirect(canonical);
 
   const isLegacyImage = chronicle.legacyFileContentType?.startsWith("image/");
+  const isAudio = chronicle.legacyFileContentType?.startsWith("audio/");
+  const youtubeId = youtubeVideoId(chronicle.externalUrl);
+  const hasFile = Boolean(chronicle.legacyFileUrl || chronicle.bodyText);
   const pdfTitle = await chroniclePdfTitle(chronicle, session);
   const pending = chronicle.status === "pending";
   const rejected = chronicle.status === "rejected";
@@ -66,9 +69,16 @@ export default async function ChroniclePage({ params }: Props) {
       <h1 className="mt-2 font-serif text-4xl font-semibold">{label}</h1>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <a href={`${canonical}/download`} className="btn">
-          Download {isLegacyImage ? "image" : "PDF"}
-        </a>
+        {hasFile && (
+          <a href={`${canonical}/download`} className="btn">
+            Download {isLegacyImage ? "image" : isAudio ? "audio" : "PDF"}
+          </a>
+        )}
+        {youtubeId && (
+          <a href={chronicle.externalUrl!} className="btn" target="_blank" rel="noopener noreferrer">
+            Watch on YouTube
+          </a>
+        )}
         {user?.isAdmin && <DeleteButton id={chronicle.id} title={label} />}
       </div>
       {(pending || rejected) && user?.isAdmin && (
@@ -78,7 +88,7 @@ export default async function ChroniclePage({ params }: Props) {
       )}
 
       <div className="mt-8">
-        <h2 className="mb-4 font-serif text-2xl font-semibold">{pdfTitle}</h2>
+        {hasFile && <h2 className="mb-4 font-serif text-2xl font-semibold">{pdfTitle}</h2>}
         {/* Text when we have it (new chronicles, and imported PDFs with extractable text);
             otherwise the original scan. */}
         {chronicle.bodyText ? (
@@ -86,14 +96,40 @@ export default async function ChroniclePage({ params }: Props) {
         ) : isLegacyImage ? (
           // eslint-disable-next-line @next/next/no-img-element -- original scanned chronicle, shown as-is
           <img src={chronicle.legacyFileUrl!} alt={`${label}, by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
+        ) : isAudio ? (
+          <audio controls preload="metadata" src={`${canonical}/download?inline=1`} className="w-full">
+            <a href={`${canonical}/download`}>Download the recording</a>
+          </audio>
         ) : chronicle.legacyFileUrl ? (
           <iframe
             src={`${canonical}/download?inline=1`}
             title={label}
             className="h-[80vh] w-full rounded-md border border-border bg-white"
           />
+        ) : youtubeId ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
+            title={label}
+            allow="encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+            className="aspect-video w-full rounded-md border border-border"
+          />
+        ) : chronicle.externalUrl ? (
+          <p className="rounded-md bg-surface px-4 py-3 text-sm">
+            The original file for this chronicle is no longer available.{" "}
+            <a href={chronicle.externalUrl} className="link" target="_blank" rel="noopener noreferrer">
+              Its old link
+            </a>
+          </p>
         ) : null}
       </div>
     </article>
   );
+}
+
+/** The video id from a YouTube link, or null. */
+function youtubeVideoId(url: string | null): string | null {
+  if (!url) return null;
+  const m = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/.exec(url);
+  return m ? m[1] : null;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "chronicles" ADD COLUMN "external_url" text;
