@@ -77,20 +77,20 @@ export default async function ChroniclePage({ params }: Props) {
       )}
 
       <div className="mt-8">
-        {chronicle.legacyFileUrl ? (
-          isLegacyImage ? (
-            // eslint-disable-next-line @next/next/no-img-element -- original scanned chronicle, shown as-is
-            <img src={chronicle.legacyFileUrl} alt={`${chronicle.title} by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
-          ) : (
-            <iframe
-              src={chronicle.legacyFileUrl}
-              title={chronicle.title}
-              className="h-[80vh] w-full rounded-md border border-border bg-white"
-            />
-          )
-        ) : (
+        {/* Text when we have it (new chronicles, and imported PDFs with extractable text);
+            otherwise the original scan. */}
+        {chronicle.bodyText ? (
           <div className="whitespace-pre-wrap font-serif text-lg leading-relaxed">{chronicle.bodyText}</div>
-        )}
+        ) : isLegacyImage ? (
+          // eslint-disable-next-line @next/next/no-img-element -- original scanned chronicle, shown as-is
+          <img src={chronicle.legacyFileUrl!} alt={`${label}, by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
+        ) : chronicle.legacyFileUrl ? (
+          <iframe
+            src={chronicle.legacyFileUrl}
+            title={label}
+            className="h-[80vh] w-full rounded-md border border-border bg-white"
+          />
+        ) : null}
       </div>
     </article>
   );

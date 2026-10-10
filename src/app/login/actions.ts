@@ -4,7 +4,10 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { ADMIN_SIGN_IN_PATH, endSession, startSession } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { db, schema } from "@/db";
 import { isAdminEmail } from "@/lib/env";
+import { getCharacters } from "@/lib/profile";
 import { normalizeEmail, requestLoginCode, verifyLoginCode } from "@/lib/login-codes";
 
 import { PENDING_EMAIL_COOKIE } from "./pending-email";
@@ -46,7 +49,15 @@ export async function verifyCode(_prev: LoginState, formData: FormData): Promise
 
   jar.delete({ name: PENDING_EMAIL_COOKIE, path: "/login" });
   await startSession(result.userId);
-  redirect(safeNext(String(formData.get("next") ?? "")));
+
+  // First sign-in: ask for real name and character names before going on.
+  const next = safeNext(String(formData.get("next") ?? ""));
+  const user = await db.query.users.findFirst({ where: eq(schema.users.id, result.userId) });
+  const characters = await getCharacters(result.userId);
+  if (!user?.playerName || characters.length === 0) {
+    redirect(`/profile?next=${encodeURIComponent(next)}`);
+  }
+  redirect(next);
 }
 
 export async function restartLogin(formData: FormData) {

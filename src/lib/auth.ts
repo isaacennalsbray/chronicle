@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db, schema } from "@/db";
 import { isAdminEmail, sessionSecret } from "./env";
+import { getCharacters } from "./profile";
 
 const SESSION_COOKIE = "chronicle_session";
 const SESSION_DAYS = 30;
@@ -14,6 +15,7 @@ export type CurrentUser = {
   id: number;
   email: string;
   playerName: string | null;
+  characters: string[];
   isAdmin: boolean;
 };
 
@@ -56,9 +58,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     id: user.id,
     email: user.email,
     playerName: user.playerName,
+    characters: await getCharacters(user.id),
     isAdmin: isAdminEmail(user.email),
   };
 });
+
+/** True until the person has given their real name and at least one character name. */
+export function needsProfile(user: CurrentUser) {
+  return !user.playerName || user.characters.length === 0;
+}
 
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
