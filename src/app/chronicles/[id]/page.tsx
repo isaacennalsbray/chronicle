@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
-import { byline, getChronicleById, seasonTitle } from "@/lib/queries";
+import { byline, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { approveChronicle } from "./actions";
 
@@ -46,10 +46,10 @@ export default async function ChroniclePage({ params }: Props) {
         <Link href={`/leagues/${league.slug}/${season.slug}`} className="link">
           {seasonTitle(season, league)}
         </Link>{" "}
-        · {session.inGameDate}
+        · {sessionLabel(session)}
       </p>
       <h1 className="mt-2 font-serif text-4xl font-semibold">{chronicle.title}</h1>
-      <p className="mt-1 text-lg text-muted">{byline(chronicle)}</p>
+      {chronicle.title !== byline(chronicle) && <p className="mt-1 text-lg text-muted">{byline(chronicle)}</p>}
 
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={`${canonical}/download`} className="btn">

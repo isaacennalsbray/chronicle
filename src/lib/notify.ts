@@ -1,7 +1,7 @@
 import "server-only";
 import { sendEmail } from "./email";
 import { adminEmails, appUrl } from "./env";
-import { byline, listPendingChronicles, seasonTitle } from "./queries";
+import { byline, distinctTitle, listPendingChronicles, seasonTitle, sessionLabel } from "./queries";
 import { chroniclePath } from "./slug";
 
 /** Emails admins a digest of every chronicle currently awaiting approval. */
@@ -14,8 +14,8 @@ export async function sendPendingDigest() {
 
   const lines = pending.map(
     ({ chronicle, session, season, league }) =>
-      `- ${chronicle.title} — ${byline(chronicle)}\n` +
-      `  ${seasonTitle(season, league)}, ${session.inGameDate}\n` +
+      `- ${byline(chronicle)}${distinctTitle(chronicle) ? ` — ${chronicle.title}` : ""}\n` +
+      `  ${seasonTitle(season, league)}, ${sessionLabel(session)}\n` +
       `  ${appUrl()}${chroniclePath(chronicle)}`,
   );
 

@@ -49,12 +49,36 @@ export async function createSession(_prev: AdminFormState, formData: FormData): 
     .from(schema.sessions)
     .where(eq(schema.sessions.seasonId, seasonId));
 
-  await db.insert(schema.sessions).values({
-    seasonId,
-    inGameDate,
-    playedOn: playedOn || null,
-    sortOrder: (last ?? 0) + 1,
-  });
+  const inserted = await db
+    .insert(schema.sessions)
+    .values({
+      seasonId,
+      inGameDate,
+      playedOn: playedOn || null,
+      sortOrder: (last ?? 0) + 1,
+    })
+    .onConflictDoNothing()
+    .returning({ id: schema.sessions.id });
+  if (inserted.length === 0) return { error: "That season already has a session on that date." };
+
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+const InGameDate = z.object({
+  sessionId: z.coerce.number().int().positive(),
+  inGameDate: z.string().trim().min(1, "Enter the in-game date.").max(100),
+});
+
+export async function setInGameDate(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const parsed = InGameDate.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  await db
+    .update(schema.sessions)
+    .set({ inGameDate: parsed.data.inGameDate })
+    .where(eq(schema.sessions.id, parsed.data.sessionId));
 
   revalidatePath("/admin");
   return { ok: true };

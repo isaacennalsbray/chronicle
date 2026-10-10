@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { byline, distinctTitle, getSeason, getSeasonListing, seasonTitle } from "@/lib/queries";
+import { byline, distinctTitle, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 
 type Props = PageProps<"/leagues/[league]/[season]">;
@@ -32,12 +32,14 @@ export default async function SeasonPage({ params }: Props) {
       <div className="mt-8 space-y-8">
         {listing.map(({ session, chronicles }) => (
           <section key={session.id}>
-            <h2 className="font-serif text-xl font-semibold">{session.inGameDate}</h2>
+            <h2 className="font-serif text-xl font-semibold">{sessionLabel(session)}</h2>
             {chronicles.length === 0 ? (
               <p className="mt-2 text-sm text-muted">
                 No chronicles yet.{" "}
                 {user ? (
-                  <Link href={`/submit?session=${session.id}`} className="link">Submit one</Link>
+                  <Link href={`/submit?league=${league.slug}${session.playedOn ? `&date=${session.playedOn}` : ""}`} className="link">
+                    Submit one
+                  </Link>
                 ) : (
                   <Link href="/login" className="link">Log in to submit one</Link>
                 )}
