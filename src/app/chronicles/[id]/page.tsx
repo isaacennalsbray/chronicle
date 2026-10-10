@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
-import { chronicleLabels, distinctTitle, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
+import { chronicleLabels, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { DeleteButton } from "./delete-button";
 import { ReviewControls } from "./review-controls";
@@ -29,7 +29,6 @@ export default async function ChroniclePage({ params }: Props) {
   const row = await load(param);
   if (!row) notFound();
   const { chronicle, session, season, league, user, label } = row;
-  const subtitle = distinctTitle(chronicle);
 
   const canonical = chroniclePath(chronicle);
   if (`/chronicles/${param}` !== canonical) redirect(canonical);
@@ -64,7 +63,6 @@ export default async function ChroniclePage({ params }: Props) {
         · {sessionLabel(session)}
       </p>
       <h1 className="mt-2 font-serif text-4xl font-semibold">{label}</h1>
-      {subtitle && <p className="mt-1 text-lg text-muted">{subtitle}</p>}
 
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={`${canonical}/download`} className="btn">
