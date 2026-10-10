@@ -24,17 +24,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col font-sans">
         <header className="border-b border-border">
           <nav className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-4 text-sm">
-            <Link href="/" className="mr-auto font-serif text-lg font-semibold">
+            <Link href="/" className="mr-auto text-lg font-semibold">
               Falnorian Chronicles
             </Link>
             {user && <Link href="/submit" className="link">Submit</Link>}
             {user && <Link href="/me" className="link">My chronicles</Link>}
             {user?.isAdmin && <Link href="/admin" className="link">Admin</Link>}
             {user ? (
-              <form action={logout} className="flex items-center gap-2">
+              <>
+                <form action={logout}>
+                  <button className="link">Log out</button>
+                </form>
                 <span className="text-muted" title="Logged in as">{user.email}</span>
-                <button className="link">Log out</button>
-              </form>
+              </>
             ) : (
               <Link href="/login" className="link">Log in</Link>
             )}

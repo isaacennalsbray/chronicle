@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { byline, distinctTitle, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
+import { DeleteSessionButton } from "./delete-session-button";
 
 type Props = PageProps<"/leagues/[league]/[season]">;
 
@@ -37,12 +38,15 @@ export default async function SeasonPage({ params }: Props) {
             <section key={session.id}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                 <h2 className="font-serif text-xl font-semibold">{sessionLabel(session)}</h2>
-                <Link
-                  href={user ? submitPath : `/login?next=${encodeURIComponent(submitPath)}`}
-                  className="link text-sm"
-                >
-                  {user ? "Submit a chronicle" : "Log in to submit"}
-                </Link>
+                <div className="flex flex-wrap items-baseline gap-x-4">
+                  {user?.isAdmin && <DeleteSessionButton sessionId={session.id} label={sessionLabel(session)} />}
+                  <Link
+                    href={user ? submitPath : `/login?next=${encodeURIComponent(submitPath)}`}
+                    className="link text-sm"
+                  >
+                    {user ? "Submit a chronicle" : "Log in to submit"}
+                  </Link>
+                </div>
               </div>
               {chronicles.length === 0 ? (
                 <p className="mt-2 text-sm text-muted">No chronicles yet.</p>

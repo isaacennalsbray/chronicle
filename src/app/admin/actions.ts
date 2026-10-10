@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, max } from "drizzle-orm";
+import { count, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, schema } from "@/db";
@@ -61,6 +61,26 @@ export async function createSession(_prev: AdminFormState, formData: FormData): 
     .returning({ id: schema.sessions.id });
   if (inserted.length === 0) return { error: "That season already has a session on that date." };
 
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function deleteSession(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const sessionId = Number(formData.get("sessionId"));
+  if (!Number.isSafeInteger(sessionId) || sessionId <= 0) return { error: "Unknown session." };
+
+  // Never take chronicles down with a session; counts hidden (pending/rejected) ones too.
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(schema.chronicles)
+    .where(eq(schema.chronicles.sessionId, sessionId));
+  if (n > 0) {
+    return { error: `This session still has ${n} chronicle${n === 1 ? "" : "s"}. Delete or move them first.` };
+  }
+
+  await db.delete(schema.sessions).where(eq(schema.sessions.id, sessionId));
+  revalidatePath("/leagues/[league]/[season]", "page");
   revalidatePath("/admin");
   return { ok: true };
 }
