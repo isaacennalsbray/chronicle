@@ -18,7 +18,8 @@ export default async function SeasonPage({ params }: Props) {
   const found = await getSeason(leagueSlug, seasonSlug);
   if (!found) notFound();
   const { league, season } = found;
-  const [listing, user] = await Promise.all([getSeasonListing(season.id), getCurrentUser()]);
+  const user = await getCurrentUser();
+  const listing = await getSeasonListing(season.id, user?.id ?? null);
 
   return (
     <div>
@@ -53,6 +54,11 @@ export default async function SeasonPage({ params }: Props) {
                       <li key={c.id}>
                         <Link href={chroniclePath(c)} className="link">{byline(c)}</Link>
                         {title && <span className="text-muted"> — {title}</span>}
+                        {c.status === "pending" && (
+                          <span className="ml-2 rounded-full bg-warning-bg px-2 py-0.5 text-xs text-warning-fg">
+                            Pending review
+                          </span>
+                        )}
                       </li>
                     );
                   })}

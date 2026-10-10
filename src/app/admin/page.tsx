@@ -10,7 +10,7 @@ import {
   sessionLabel,
 } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
-import { approveChronicle, rejectChronicle } from "../chronicles/[id]/actions";
+import { ReviewControls } from "../chronicles/[id]/review-controls";
 import { NewSeasonForm, NewSessionForm } from "./forms";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -28,7 +28,7 @@ export default async function AdminPage() {
         ) : (
           <ul className="mt-4 divide-y divide-border">
             {pending.map(({ chronicle, session, season, league }) => (
-              <li key={chronicle.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <li key={chronicle.id} className="space-y-3 py-4">
                 <div>
                   <Link href={chroniclePath(chronicle)} className="link font-medium">{byline(chronicle)}</Link>
                   {distinctTitle(chronicle) && <span className="text-muted"> — {chronicle.title}</span>}
@@ -37,16 +37,7 @@ export default async function AdminPage() {
                     {chronicle.submittedAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <form action={approveChronicle}>
-                    <input type="hidden" name="id" value={chronicle.id} />
-                    <button className="btn">Approve</button>
-                  </form>
-                  <form action={rejectChronicle}>
-                    <input type="hidden" name="id" value={chronicle.id} />
-                    <button className="btn-secondary">Reject</button>
-                  </form>
-                </div>
+                <ReviewControls id={chronicle.id} />
               </li>
             ))}
           </ul>

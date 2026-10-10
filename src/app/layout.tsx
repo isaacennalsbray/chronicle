@@ -31,7 +31,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {user && <Link href="/me" className="link">My chronicles</Link>}
             {user?.isAdmin && <Link href="/admin" className="link">Admin</Link>}
             {user ? (
-              <form action={logout}>
+              <form action={logout} className="flex items-center gap-2">
+                <span className="text-muted" title="Logged in as">{user.email}</span>
                 <button className="link">Log out</button>
               </form>
             ) : (

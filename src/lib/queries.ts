@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Chronicle } from "@/db/schema";
 
@@ -58,8 +58,11 @@ export async function getSeason(leagueSlug: string, seasonSlug: string) {
   return row ?? null;
 }
 
-/** Sessions of a season, each with its approved chronicles, in display order. */
-export async function getSeasonListing(seasonId: number) {
+/**
+ * Sessions of a season, each with its approved chronicles in display order. The viewer's
+ * own pending chronicles are included too, so authors can see where theirs will appear.
+ */
+export async function getSeasonListing(seasonId: number, viewerId: number | null) {
   const sessionRows = await db
     .select()
     .from(sessions)
@@ -70,7 +73,17 @@ export async function getSeasonListing(seasonId: number) {
     .select({ chronicle: chronicles })
     .from(chronicles)
     .innerJoin(sessions, eq(chronicles.sessionId, sessions.id))
-    .where(and(eq(sessions.seasonId, seasonId), eq(chronicles.status, "approved")))
+    .where(
+      and(
+        eq(sessions.seasonId, seasonId),
+        viewerId === null
+          ? eq(chronicles.status, "approved")
+          : or(
+              eq(chronicles.status, "approved"),
+              and(eq(chronicles.status, "pending"), eq(chronicles.authorUserId, viewerId)),
+            ),
+      ),
+    )
     .orderBy(asc(chronicles.submittedAt), asc(chronicles.id));
 
   return sessionRows.map((session) => ({

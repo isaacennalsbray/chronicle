@@ -105,6 +105,8 @@ export const chronicles = pgTable(
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    // Optional note from the admin, shown to the author.
+    rejectionReason: text("rejection_reason"),
     // Original PDF or image from the old site, stored in Vercel Blob.
     legacyFileUrl: text("legacy_file_url"),
     legacyFileContentType: text("legacy_file_content_type"),
