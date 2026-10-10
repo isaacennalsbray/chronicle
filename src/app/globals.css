@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf7f0;
+  --surface: #ffffff;
+  --foreground: #1f1b16;
+  --muted: #6b6257;
+  --border: #e4ddd0;
+  --accent: #7a3e1d;
+  --accent-foreground: #ffffff;
+  --warning-bg: #fff4d6;
+  --warning-fg: #6b4a00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #16130f;
+    --surface: #1f1b16;
+    --foreground: #ede6da;
+    --muted: #a89d8e;
+    --border: #3a332a;
+    --accent: #e0a57c;
+    --accent-foreground: #16130f;
+    --warning-bg: #3a2e10;
+    --warning-fg: #f3d58a;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-fg: var(--warning-fg);
+  --font-sans: var(--font-geist);
+  --font-serif: var(--font-source-serif);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-surface;
+  }
+  .input {
+    @apply w-full rounded-md border border-border bg-surface px-3 py-2 text-base outline-none focus:border-accent;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium;
+  }
+  .link {
+    @apply text-accent underline-offset-2 hover:underline;
+  }
+}
