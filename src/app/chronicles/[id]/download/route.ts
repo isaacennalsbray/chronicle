@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { renderChroniclePdf } from "@/lib/pdf";
@@ -11,14 +11,23 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
   if (!row || !canView(row.chronicle, await getCurrentUser())) notFound();
   const { chronicle, session } = row;
 
-  // Imported chronicles: serve the original file untouched.
-  if (chronicle.legacyFileUrl) {
-    const url = new URL(chronicle.legacyFileUrl);
-    url.searchParams.set("download", "1");
-    redirect(url.toString());
-  }
-
   const fileBase = await chroniclePdfTitle(chronicle, session);
+  const cacheControl = chronicle.status === "approved" ? "public, max-age=300" : "private, no-store";
+
+  // Imported chronicles: serve the original file untouched, under the common file name.
+  if (chronicle.legacyFileUrl) {
+    const original = await fetch(chronicle.legacyFileUrl);
+    if (!original.ok || !original.body) notFound();
+    const contentType = chronicle.legacyFileContentType ?? "application/octet-stream";
+    const extension = contentType.startsWith("image/jpeg") ? "jpg" : (contentType.split("/")[1] ?? "pdf");
+    return new Response(original.body, {
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `attachment; filename="${fileBase}.${extension}"`,
+        "Cache-Control": cacheControl,
+      },
+    });
+  }
 
   const pdf = await renderChroniclePdf({
     documentTitle: fileBase,
@@ -30,7 +39,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${fileBase}.pdf"`,
-      "Cache-Control": chronicle.status === "approved" ? "public, max-age=300" : "private, no-store",
+      "Cache-Control": cacheControl,
     },
   });
 }
