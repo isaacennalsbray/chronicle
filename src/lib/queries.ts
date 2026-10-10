@@ -147,16 +147,6 @@ export function byline(c: { characterName: string; playerName: string }) {
   return `${c.characterName} (${c.playerName})`;
 }
 
-/**
- * The title, unless it just repeats the byline or character name (ignoring a trailing
- * I/II, which chronicleLabels already shows).
- */
-export function distinctTitle(c: { title: string; characterName: string; playerName: string }) {
-  const redundant = [c.characterName, `${c.characterName} Chronicle`, byline(c)].map((t) => t.toLowerCase());
-  const title = c.title.trim().replace(/\s+[IVX]+$/, "").toLowerCase();
-  return redundant.includes(title) ? null : c.title;
-}
-
 type Labelable = Pick<Chronicle, "id" | "sessionId" | "characterName" | "playerName">;
 
 /**

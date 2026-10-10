@@ -3,7 +3,6 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import {
   chronicleLabels,
-  distinctTitle,
   listLeaguesWithSeasons,
   listPendingChronicles,
   seasonTitle,
@@ -32,7 +31,6 @@ export default async function AdminPage() {
               <li key={chronicle.id} className="space-y-3 py-4">
                 <div>
                   <Link href={chroniclePath(chronicle)} className="link font-medium">{labels.get(chronicle.id)}</Link>
-                  {distinctTitle(chronicle) && <span className="text-muted"> — {chronicle.title}</span>}
                   <p className="text-sm text-muted">
                     {seasonTitle(season, league)} · {sessionLabel(session)} · submitted{" "}
                     {chronicle.submittedAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
