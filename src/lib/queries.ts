@@ -119,8 +119,8 @@ export async function listSessionOptions() {
 }
 
 /**
- * The chronicle's position among one player's chronicles in its session, or null when
- * it is their only one. Counts approved chronicles plus this one, oldest first.
+ * The chronicle's position among one player's published chronicles in its session, oldest
+ * first, or null when it is their only one (or isn't published yet).
  */
 export async function chronicleNumber(c: Pick<Chronicle, "id" | "sessionId" | "playerName">) {
   const siblings = await db
@@ -133,8 +133,10 @@ export async function chronicleNumber(c: Pick<Chronicle, "id" | "sessionId" | "p
       ),
     )
     .orderBy(asc(chronicles.submittedAt), asc(chronicles.id));
-  const counted = siblings.filter((s) => s.status === "approved" || s.id === c.id);
-  return counted.length > 1 ? counted.findIndex((s) => s.id === c.id) + 1 : null;
+  // Only published chronicles are numbered, so a pending one doesn't renumber the others.
+  const published = siblings.filter((s) => s.status === "approved");
+  const index = published.findIndex((s) => s.id === c.id);
+  return published.length > 1 && index >= 0 ? index + 1 : null;
 }
 
 export function seasonTitle(season: { label: string; codename: string | null }, league: { name: string }) {
@@ -151,16 +153,14 @@ type Labelable = Pick<Chronicle, "id" | "sessionId" | "characterName" | "playerN
 
 /**
  * Display labels like "Bartholomew (Tobin)", numbered "Bartholomew (Tobin) I" / "… II" when
- * one session has several chronicles with the same character and player. Numbering follows
- * submission order among approved chronicles plus the ones passed in (so a pending one being
- * reviewed is numbered too).
+ * one session has several published chronicles with the same character and player, in
+ * submission order. Pending and rejected chronicles are never numbered and don't count.
  */
 export async function chronicleLabels(rows: Labelable[]): Promise<Map<number, string>> {
   const labels = new Map(rows.map((c) => [c.id, byline(c)]));
   if (rows.length === 0) return labels;
 
   const sessionIds = [...new Set(rows.map((c) => c.sessionId))];
-  const ids = rows.map((c) => c.id);
   const siblings = await db
     .select({
       id: chronicles.id,
@@ -169,7 +169,7 @@ export async function chronicleLabels(rows: Labelable[]): Promise<Map<number, st
       playerName: chronicles.playerName,
     })
     .from(chronicles)
-    .where(and(inArray(chronicles.sessionId, sessionIds), or(eq(chronicles.status, "approved"), inArray(chronicles.id, ids))))
+    .where(and(inArray(chronicles.sessionId, sessionIds), eq(chronicles.status, "approved")))
     .orderBy(asc(chronicles.submittedAt), asc(chronicles.id));
 
   const groups = new Map<string, number[]>();
