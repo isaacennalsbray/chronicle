@@ -61,7 +61,8 @@ export const seasons = pgTable(
   (t) => [uniqueIndex("seasons_league_slug_idx").on(t.leagueId, t.slug)],
 );
 
-// One game day within a season, labelled by its in-game date.
+// One game day within a season. Sessions created from a player's submission start
+// with only the real-world date; an admin fills in the in-game date later.
 export const sessions = pgTable(
   "sessions",
   {
@@ -69,12 +70,15 @@ export const sessions = pgTable(
     seasonId: integer("season_id")
       .notNull()
       .references(() => seasons.id),
-    inGameDate: text("in_game_date").notNull(), // e.g. "4th of Ninthmoon, 287.3.3"
+    inGameDate: text("in_game_date"), // e.g. "4th of Ninthmoon, 287.3.3"
     playedOn: date("played_on"), // real-world date, if known
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("sessions_season_idx").on(t.seasonId)],
+  (t) => [
+    index("sessions_season_idx").on(t.seasonId),
+    uniqueIndex("sessions_season_played_on_idx").on(t.seasonId, t.playedOn),
+  ],
 );
 
 export const chronicleStatus = pgEnum("chronicle_status", ["pending", "approved"]);

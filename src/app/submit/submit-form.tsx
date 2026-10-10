@@ -3,15 +3,15 @@
 import { useActionState } from "react";
 import { type SubmitState, submitChronicle } from "./actions";
 
-type Group = { label: string; sessions: { id: number; label: string }[] };
-
 export function SubmitForm({
-  groups,
-  defaultSessionId,
+  leagues,
+  defaultLeagueId,
+  defaultDate,
   defaultPlayerName,
 }: {
-  groups: Group[];
-  defaultSessionId: string;
+  leagues: { id: number; name: string }[];
+  defaultLeagueId: string;
+  defaultDate: string;
   defaultPlayerName: string;
 }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitChronicle, {});
@@ -20,15 +20,11 @@ export function SubmitForm({
   return (
     <form action={action} className="mt-6 space-y-5">
       <div>
-        <label htmlFor="sessionId" className="label">Session</label>
-        <select id="sessionId" name="sessionId" required defaultValue={v?.sessionId ?? defaultSessionId} className="input">
-          <option value="" disabled>Choose a game day…</option>
-          {groups.map((g) => (
-            <optgroup key={g.label} label={g.label}>
-              {g.sessions.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
-            </optgroup>
+        <label htmlFor="leagueId" className="label">League</label>
+        <select id="leagueId" name="leagueId" required defaultValue={v?.leagueId ?? defaultLeagueId} className="input">
+          <option value="" disabled>Choose a league…</option>
+          {leagues.map((l) => (
+            <option key={l.id} value={l.id}>{l.name}</option>
           ))}
         </select>
       </div>
@@ -38,13 +34,13 @@ export function SubmitForm({
           <input id="characterName" name="characterName" required maxLength={100} defaultValue={v?.characterName} className="input" />
         </div>
         <div>
-          <label htmlFor="playerName" className="label">Your name</label>
+          <label htmlFor="playerName" className="label">Player name</label>
           <input id="playerName" name="playerName" required maxLength={100} defaultValue={v?.playerName ?? defaultPlayerName} className="input" />
         </div>
       </div>
       <div>
-        <label htmlFor="title" className="label">Title</label>
-        <input id="title" name="title" required maxLength={200} defaultValue={v?.title} className="input" />
+        <label htmlFor="playedOn" className="label">Date of the LARP event</label>
+        <input id="playedOn" name="playedOn" type="date" required defaultValue={v?.playedOn ?? defaultDate} className="input" />
       </div>
       <div>
         <label htmlFor="bodyText" className="label">Chronicle</label>

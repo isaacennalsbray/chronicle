@@ -2,6 +2,7 @@ import "server-only";
 import { PDFDocument, type PDFFont, rgb, StandardFonts } from "pdf-lib";
 
 type ChroniclePdfInput = {
+  documentTitle: string; // PDF metadata title, e.g. "2026-09-04ChronicleIsaac"
   title: string;
   byline: string; // e.g. "Zeek (Isaac)"
   header: string; // e.g. "Helios · S14 · 4th of Ninthmoon, 287.3.3"
@@ -65,7 +66,7 @@ function wrap(font: PDFFont, size: number, text: string, maxWidth: number): stri
 
 export async function renderChroniclePdf(input: ChroniclePdfInput): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  doc.setTitle(input.title);
+  doc.setTitle(input.documentTitle);
   doc.setAuthor(input.byline);
 
   const serif = await doc.embedFont(StandardFonts.TimesRoman);
@@ -91,7 +92,7 @@ export async function renderChroniclePdf(input: ChroniclePdfInput): Promise<Uint
   draw(input.header.toUpperCase(), sans, 9, 12, muted);
   y -= 8;
   draw(input.title, serifBold, 22, 28);
-  draw(input.byline, serif, 13, 18, muted);
+  if (input.byline !== input.title) draw(input.byline, serif, 13, 18, muted);
   y -= 18;
   draw(input.body.replace(/\r\n?/g, "\n").replace(/\t/g, "    "), serif, BODY_SIZE, LINE_HEIGHT);
 

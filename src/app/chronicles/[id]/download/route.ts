@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { renderChroniclePdf } from "@/lib/pdf";
-import { byline, getChronicleById, seasonTitle } from "@/lib/queries";
+import { byline, chronicleFileBase, chronicleNumber, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { parseChronicleId } from "@/lib/slug";
 
 export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/download">) {
@@ -18,17 +18,21 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
     redirect(url.toString());
   }
 
+  const playedOn = session.playedOn ?? chronicle.submittedAt.toISOString().slice(0, 10);
+  const fileBase = chronicleFileBase(playedOn, chronicle.playerName, await chronicleNumber(chronicle));
+
   const pdf = await renderChroniclePdf({
+    documentTitle: fileBase,
     title: chronicle.title,
     byline: byline(chronicle),
-    header: `${seasonTitle(season, league)} · ${session.inGameDate}`,
+    header: `${seasonTitle(season, league)} · ${sessionLabel(session)}`,
     body: chronicle.bodyText ?? "",
   });
 
   return new Response(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${chronicle.slug}.pdf"`,
+      "Content-Disposition": `attachment; filename="${fileBase}.pdf"`,
       "Cache-Control": chronicle.status === "approved" ? "public, max-age=300" : "private, no-store",
     },
   });

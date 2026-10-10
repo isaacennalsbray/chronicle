@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { listChroniclesByAuthor, seasonTitle } from "@/lib/queries";
+import { listChroniclesByAuthor, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 
 export const metadata: Metadata = { title: "My chronicles" };
@@ -25,7 +25,7 @@ export default async function MyChroniclesPage() {
               <div>
                 <Link href={chroniclePath(chronicle)} className="link font-medium">{chronicle.title}</Link>
                 <p className="text-sm text-muted">
-                  {seasonTitle(season, league)} · {session.inGameDate}
+                  {seasonTitle(season, league)} · {sessionLabel(session)}
                 </p>
               </div>
               <StatusBadge status={chronicle.status} />
