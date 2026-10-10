@@ -96,6 +96,9 @@ export const chronicles = pgTable(
     playerName: text("player_name").notNull(),
     // Null for legacy imports, whose content lives only in the original file.
     bodyText: text("body_text"),
+    // Real date of the event, worked out from the session's in-game date and the year
+    // the player gave. Used for the PDF file name.
+    eventDate: date("event_date"),
     // Null for legacy imports with no site account.
     authorUserId: integer("author_user_id").references(() => users.id),
     status: chronicleStatus("status").notNull().default("pending"),

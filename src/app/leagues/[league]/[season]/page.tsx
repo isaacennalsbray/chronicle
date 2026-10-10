@@ -31,7 +31,7 @@ export default async function SeasonPage({ params }: Props) {
 
       <div className="mt-8 space-y-8">
         {listing.map(({ session, chronicles }) => {
-          const submitPath = `/submit?league=${league.slug}${session.playedOn ? `&date=${session.playedOn}` : ""}`;
+          const submitPath = `/submit?session=${session.id}`;
           return (
             <section key={session.id}>
               <div className="flex flex-wrap items-baseline justify-between gap-x-4">

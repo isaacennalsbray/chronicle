@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, isNull, max, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Chronicle } from "@/db/schema";
 
@@ -91,59 +91,18 @@ export async function listChroniclesByAuthor(userId: number) {
     .orderBy(desc(chronicles.submittedAt));
 }
 
-/** Sessions without an in-game date yet (usually created from a submission). */
-export async function listSessionsMissingInGameDate() {
+export async function listLeagues() {
+  return db.select().from(leagues).orderBy(asc(leagues.sortOrder));
+}
+
+/** Every session with its league, newest season first, for the submit form. */
+export async function listSessionOptions() {
   return db
     .select({ session: sessions, season: seasons, league: leagues })
     .from(sessions)
     .innerJoin(seasons, eq(sessions.seasonId, seasons.id))
     .innerJoin(leagues, eq(seasons.leagueId, leagues.id))
-    .where(isNull(sessions.inGameDate))
-    .orderBy(asc(sessions.playedOn), asc(sessions.id));
-}
-
-export async function listLeagues() {
-  return db.select().from(leagues).orderBy(asc(leagues.sortOrder));
-}
-
-/**
- * Finds the league's session for a real-world date, or creates one in the league's
- * newest season. Returns null if the league has no seasons yet.
- */
-export async function findOrCreateSessionByDate(leagueId: number, playedOn: string) {
-  const [existing] = await db
-    .select({ session: sessions })
-    .from(sessions)
-    .innerJoin(seasons, eq(sessions.seasonId, seasons.id))
-    .where(and(eq(seasons.leagueId, leagueId), eq(sessions.playedOn, playedOn)))
-    .orderBy(desc(seasons.createdAt))
-    .limit(1);
-  if (existing) return existing.session;
-
-  const [season] = await db
-    .select()
-    .from(seasons)
-    .where(eq(seasons.leagueId, leagueId))
-    .orderBy(desc(seasons.createdAt), desc(seasons.id))
-    .limit(1);
-  if (!season) return null;
-
-  const [{ last }] = await db
-    .select({ last: max(sessions.sortOrder) })
-    .from(sessions)
-    .where(eq(sessions.seasonId, season.id));
-  const [created] = await db
-    .insert(sessions)
-    .values({ seasonId: season.id, playedOn, sortOrder: (last ?? 0) + 1 })
-    .onConflictDoNothing()
-    .returning();
-  // Lost a race with a simultaneous submission for the same date: use its session.
-  return (
-    created ??
-    (await db.query.sessions.findFirst({
-      where: and(eq(sessions.seasonId, season.id), eq(sessions.playedOn, playedOn)),
-    }))!
-  );
+    .orderBy(asc(leagues.sortOrder), desc(seasons.createdAt), asc(sessions.sortOrder), asc(sessions.id));
 }
 
 /**
@@ -185,7 +144,7 @@ export function formatPlayedOn(playedOn: string) {
   return new Date(`${playedOn}T12:00:00Z`).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" });
 }
 
-/** The in-game date, falling back to the real date until an admin fills it in. */
+/** The in-game date, falling back to the real date if a session has none. */
 export function sessionLabel(session: { inGameDate: string | null; playedOn: string | null }) {
   return session.inGameDate ?? (session.playedOn ? formatPlayedOn(session.playedOn) : "Date to be announced");
 }

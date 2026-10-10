@@ -4,25 +4,19 @@ import { requireAdmin } from "@/lib/auth";
 import {
   byline,
   distinctTitle,
-  formatPlayedOn,
   listLeaguesWithSeasons,
   listPendingChronicles,
-  listSessionsMissingInGameDate,
   seasonTitle,
   sessionLabel,
 } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
-import { InGameDateForm, NewSeasonForm, NewSessionForm } from "./forms";
+import { NewSeasonForm, NewSessionForm } from "./forms";
 
 export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminPage() {
   await requireAdmin();
-  const [pending, leagues, undated] = await Promise.all([
-    listPendingChronicles(),
-    listLeaguesWithSeasons(),
-    listSessionsMissingInGameDate(),
-  ]);
+  const [pending, leagues] = await Promise.all([listPendingChronicles(), listLeaguesWithSeasons()]);
 
   return (
     <div className="space-y-12">
@@ -46,31 +40,10 @@ export default async function AdminPage() {
         )}
       </section>
 
-      {undated.length > 0 && (
-        <section>
-          <h2 className="font-serif text-2xl font-semibold">Sessions needing an in-game date</h2>
-          <p className="mt-1 text-sm text-muted">
-            These were created when a player submitted a chronicle for a new date. Until you fill them in, the site
-            shows the real date instead.
-          </p>
-          <ul className="mt-4 space-y-4">
-            {undated.map(({ session, season, league }) => (
-              <li key={session.id}>
-                <p className="font-medium">
-                  {session.playedOn ? formatPlayedOn(session.playedOn) : "No date"}
-                  <span className="font-normal text-muted"> · {seasonTitle(season, league)}</span>
-                </p>
-                <InGameDateForm sessionId={session.id} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <section>
         <h2 className="font-serif text-2xl font-semibold">Add a session</h2>
         <p className="mt-1 text-sm text-muted">
-          Optional: sessions are also created automatically when a player submits for a new date.
+          Players pick from these sessions when submitting.
         </p>
         <NewSessionForm
           seasons={leagues.flatMap(({ league, seasons }) =>

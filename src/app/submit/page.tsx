@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
-import { listLeagues } from "@/lib/queries";
+import { listLeagues, listSessionOptions, seasonTitle, sessionLabel } from "@/lib/queries";
 import { SubmitForm } from "./submit-form";
 
 export const metadata: Metadata = { title: "Submit a chronicle" };
 
 export default async function SubmitPage({ searchParams }: PageProps<"/submit">) {
   const user = await requireUser();
-  const { league, date } = await searchParams;
-  const leagues = await listLeagues();
-  const defaultLeague = leagues.find((l) => l.slug === league);
+  const { session: sessionParam } = await searchParams;
+  const [leagues, options] = await Promise.all([listLeagues(), listSessionOptions()]);
+
+  const sessions = options.map(({ session, season, league }) => ({
+    id: session.id,
+    leagueId: league.id,
+    label: sessionLabel(session),
+    group: seasonTitle(season, league),
+  }));
+  const preselected = sessions.find((s) => String(s.id) === sessionParam);
 
   return (
     <div>
@@ -19,8 +26,10 @@ export default async function SubmitPage({ searchParams }: PageProps<"/submit">)
       </p>
       <SubmitForm
         leagues={leagues.map((l) => ({ id: l.id, name: l.name }))}
-        defaultLeagueId={defaultLeague ? String(defaultLeague.id) : ""}
-        defaultDate={typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : ""}
+        sessions={sessions}
+        defaultLeagueId={preselected ? String(preselected.leagueId) : ""}
+        defaultSessionId={preselected ? String(preselected.id) : ""}
+        defaultYear={String(new Date().getFullYear())}
         defaultPlayerName={user.playerName ?? ""}
       />
     </div>
