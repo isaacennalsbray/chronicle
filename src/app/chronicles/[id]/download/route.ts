@@ -23,7 +23,6 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
 
   const pdf = await renderChroniclePdf({
     documentTitle: fileBase,
-    title: chronicle.title,
     byline: byline(chronicle),
     header: `${seasonTitle(season, league)} · ${sessionLabel(session)}`,
     body: chronicle.bodyText ?? "",
