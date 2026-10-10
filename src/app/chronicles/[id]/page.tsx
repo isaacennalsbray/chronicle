@@ -5,7 +5,7 @@ import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { byline, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
-import { approveChronicle } from "./actions";
+import { approveChronicle, rejectChronicle } from "./actions";
 
 type Props = PageProps<"/chronicles/[id]">;
 
@@ -33,12 +33,19 @@ export default async function ChroniclePage({ params }: Props) {
 
   const isLegacyImage = chronicle.legacyFileContentType?.startsWith("image/");
   const pending = chronicle.status === "pending";
+  const rejected = chronicle.status === "rejected";
 
   return (
     <article>
       {pending && (
         <div className="mb-6 rounded-md bg-warning-bg px-4 py-3 text-sm text-warning-fg">
           <strong>Pending review.</strong> Only the author and admins can see this until it&apos;s approved.
+        </div>
+      )}
+      {rejected && (
+        <div className="mb-6 rounded-md bg-rejected-bg px-4 py-3 text-sm text-rejected-fg">
+          <strong>Not approved.</strong> An admin decided not to publish this chronicle. Only the author and admins can
+          see it.
         </div>
       )}
 
@@ -55,10 +62,16 @@ export default async function ChroniclePage({ params }: Props) {
         <a href={`${canonical}/download`} className="btn">
           Download {isLegacyImage ? "image" : "PDF"}
         </a>
-        {pending && user?.isAdmin && (
+        {(pending || rejected) && user?.isAdmin && (
           <form action={approveChronicle}>
             <input type="hidden" name="id" value={chronicle.id} />
             <button className="btn-secondary">Approve</button>
+          </form>
+        )}
+        {pending && user?.isAdmin && (
+          <form action={rejectChronicle}>
+            <input type="hidden" name="id" value={chronicle.id} />
+            <button className="btn-secondary">Reject</button>
           </form>
         )}
       </div>

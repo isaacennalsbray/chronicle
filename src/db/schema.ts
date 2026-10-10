@@ -81,7 +81,7 @@ export const sessions = pgTable(
   ],
 );
 
-export const chronicleStatus = pgEnum("chronicle_status", ["pending", "approved"]);
+export const chronicleStatus = pgEnum("chronicle_status", ["pending", "approved", "rejected"]);
 
 export const chronicles = pgTable(
   "chronicles",
@@ -104,6 +104,7 @@ export const chronicles = pgTable(
     status: chronicleStatus("status").notNull().default("pending"),
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
     // Original PDF or image from the old site, stored in Vercel Blob.
     legacyFileUrl: text("legacy_file_url"),
     legacyFileContentType: text("legacy_file_content_type"),

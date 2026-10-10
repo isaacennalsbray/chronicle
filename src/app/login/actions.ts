@@ -3,7 +3,8 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { endSession, startSession } from "@/lib/auth";
+import { ADMIN_SIGN_IN_PATH, endSession, startSession } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/env";
 import { normalizeEmail, requestLoginCode, verifyLoginCode } from "@/lib/login-codes";
 
 import { PENDING_EMAIL_COOKIE } from "./pending-email";
@@ -14,6 +15,9 @@ export async function requestCode(_prev: LoginState, formData: FormData): Promis
   const parsed = z.email().safeParse(normalizeEmail(String(formData.get("email") ?? "")));
   if (!parsed.success) return { error: "Enter a valid email address." };
   const email = parsed.data;
+  if (formData.get("admin") === "1" && !isAdminEmail(email)) {
+    return { error: "That email isn't an admin." };
+  }
 
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const result = await requestLoginCode(email, ip);
@@ -45,9 +49,9 @@ export async function verifyCode(_prev: LoginState, formData: FormData): Promise
   redirect(safeNext(String(formData.get("next") ?? "")));
 }
 
-export async function restartLogin() {
+export async function restartLogin(formData: FormData) {
   (await cookies()).delete({ name: PENDING_EMAIL_COOKIE, path: "/login" });
-  redirect("/login");
+  redirect(formData.get("admin") === "1" ? ADMIN_SIGN_IN_PATH : "/login");
 }
 
 export async function logout() {
