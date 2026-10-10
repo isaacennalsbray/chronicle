@@ -88,3 +88,18 @@ export async function renderChroniclePdf(input: ChroniclePdfInput): Promise<Uint
 
   return doc.save();
 }
+
+/**
+ * Replaces the title stored inside an existing PDF (what viewers show in their title bar), e.g.
+ * an old-site file titled "Copy of Halimin". Content and layout are untouched. Returns null if
+ * the file can't be rewritten, so the caller can serve the original instead.
+ */
+export async function retitlePdf(bytes: Uint8Array, title: string): Promise<Uint8Array | null> {
+  try {
+    const doc = await PDFDocument.load(bytes, { updateMetadata: false, ignoreEncryption: true });
+    doc.setTitle(title);
+    return await doc.save({ useObjectStreams: false });
+  } catch {
+    return null;
+  }
+}

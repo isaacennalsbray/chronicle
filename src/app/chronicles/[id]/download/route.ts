@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
-import { renderChroniclePdf } from "@/lib/pdf";
+import { renderChroniclePdf, retitlePdf } from "@/lib/pdf";
 import { byline, chroniclePdfTitle, getChronicleById } from "@/lib/queries";
 import { parseChronicleId } from "@/lib/slug";
 
-export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/download">) {
+export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/download">) {
   const id = parseChronicleId((await ctx.params).id);
   const row = id ? await getChronicleById(id) : null;
   if (!row || !canView(row.chronicle, await getCurrentUser())) notFound();
@@ -13,17 +13,22 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
 
   const fileBase = await chroniclePdfTitle(chronicle, session);
   const cacheControl = chronicle.status === "approved" ? "public, max-age=300" : "private, no-store";
+  // ?inline=1 shows the file in the browser (the on-page viewer) instead of downloading it.
+  const disposition = new URL(req.url).searchParams.get("inline") === "1" ? "inline" : "attachment";
 
-  // Imported chronicles: serve the original file untouched, under the common file name.
+  // Imported chronicles: serve the original file under the common name. PDFs also get their
+  // stored title (e.g. "Copy of Halimin") replaced with it; content is unchanged.
   if (chronicle.legacyFileUrl) {
     const original = await fetch(chronicle.legacyFileUrl);
-    if (!original.ok || !original.body) notFound();
+    if (!original.ok) notFound();
     const contentType = chronicle.legacyFileContentType ?? "application/octet-stream";
     const extension = contentType.startsWith("image/jpeg") ? "jpg" : (contentType.split("/")[1] ?? "pdf");
-    return new Response(original.body, {
+    let bytes: Uint8Array = new Uint8Array(await original.arrayBuffer());
+    if (contentType.startsWith("application/pdf")) bytes = (await retitlePdf(bytes, fileBase)) ?? bytes;
+    return new Response(Buffer.from(bytes), {
       headers: {
         "Content-Type": contentType,
-        "Content-Disposition": `attachment; filename="${fileBase}.${extension}"`,
+        "Content-Disposition": `${disposition}; filename="${fileBase}.${extension}"`,
         "Cache-Control": cacheControl,
       },
     });
@@ -38,7 +43,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/chronicles/[id]/dow
   return new Response(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${fileBase}.pdf"`,
+      "Content-Disposition": `${disposition}; filename="${fileBase}.pdf"`,
       "Cache-Control": cacheControl,
     },
   });
