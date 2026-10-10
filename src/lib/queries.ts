@@ -206,17 +206,14 @@ export function chronicleFileBase(playedOn: string, playerName: string, number: 
 }
 
 /**
- * The chronicle's PDF title, which is also its download file name (without extension): the
- * original file name for imported chronicles (e.g. "260904ChronicleIsaac"), otherwise e.g.
- * "2026-10-09ChronicleIsaac".
+ * The chronicle's PDF title, which is also its download file name (without extension), the
+ * same for every chronicle: e.g. "2026-10-09ChronicleIsaac", with I/II when a player has more
+ * than one in a session.
  */
 export async function chroniclePdfTitle(
   chronicle: Chronicle,
   session: { playedOn: string | null },
 ): Promise<string> {
-  if (chronicle.legacySourceUrl) {
-    return decodeURIComponent(chronicle.legacySourceUrl.split("/").pop() ?? "").replace(/\.[a-z0-9]+$/i, "");
-  }
   const eventDate = chronicle.eventDate ?? session.playedOn ?? chronicle.submittedAt.toISOString().slice(0, 10);
   return chronicleFileBase(eventDate, chronicle.playerName, await chronicleNumber(chronicle));
 }
