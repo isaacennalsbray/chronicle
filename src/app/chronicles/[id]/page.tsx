@@ -45,7 +45,7 @@ export default async function ChroniclePage({ params }: Props) {
       )}
       {rejected && (
         <div className="mb-6 rounded-md bg-rejected-bg px-4 py-3 text-sm text-rejected-fg">
-          <strong>Not approved.</strong> An admin decided not to publish this chronicle. Only the author and admins can
+          <strong>Rejected.</strong> An admin decided not to publish this chronicle. Only the author and admins can
           see it.
           {chronicle.rejectionReason && (
             <p className="mt-2 whitespace-pre-wrap">

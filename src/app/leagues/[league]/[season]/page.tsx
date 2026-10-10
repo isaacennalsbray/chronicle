@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { byline, distinctTitle, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
+import { DeleteSeasonButton } from "./delete-season-button";
 import { DeleteSessionButton } from "./delete-session-button";
 
 type Props = PageProps<"/leagues/[league]/[season]">;
@@ -28,6 +29,11 @@ export default async function SeasonPage({ params }: Props) {
         <Link href={`/leagues/${league.slug}`} className="link">{league.name}</Link>
       </p>
       <h1 className="mt-1 font-serif text-3xl font-semibold">{seasonTitle(season, league)}</h1>
+      {user?.isAdmin && (
+        <div className="mt-2">
+          <DeleteSeasonButton seasonId={season.id} label={seasonTitle(season, league)} />
+        </div>
+      )}
 
       {listing.length === 0 && <p className="mt-6 text-muted">No sessions yet.</p>}
 
