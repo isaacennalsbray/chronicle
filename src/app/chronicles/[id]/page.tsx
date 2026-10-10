@@ -88,7 +88,7 @@ export default async function ChroniclePage({ params }: Props) {
           <img src={chronicle.legacyFileUrl!} alt={`${label}, by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
         ) : chronicle.legacyFileUrl ? (
           <iframe
-            src={chronicle.legacyFileUrl}
+            src={`${canonical}/download?inline=1`}
             title={label}
             className="h-[80vh] w-full rounded-md border border-border bg-white"
           />
