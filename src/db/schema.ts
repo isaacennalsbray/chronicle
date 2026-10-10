@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   integer,
@@ -16,6 +17,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   // The person's real name, asked for at first sign-in and used to prefill submissions.
   playerName: text("player_name"),
+  // Whether they want emails from the site; null until they answer the pop-up.
+  emailNotifications: boolean("email_notifications"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

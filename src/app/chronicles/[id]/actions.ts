@@ -5,10 +5,20 @@ import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
 import { del } from "@vercel/blob";
 import { requireAdmin } from "@/lib/auth";
+import { sendReviewResult } from "@/lib/notify";
 import { getChronicleById } from "@/lib/queries";
 import { parseChronicleId } from "@/lib/slug";
 
 const { chronicles } = schema;
+
+async function notifyAuthor(chronicleId: number) {
+  try {
+    await sendReviewResult(chronicleId);
+  } catch (err) {
+    // The decision is saved; a failed email shouldn't undo it.
+    console.error("Failed to email review result", err);
+  }
+}
 
 export async function approveChronicle(formData: FormData) {
   await requireAdmin();
@@ -22,6 +32,7 @@ export async function approveChronicle(formData: FormData) {
     .where(and(eq(chronicles.id, id), ne(chronicles.status, "approved")))
     .returning({ id: chronicles.id, slug: chronicles.slug });
 
+  if (approved) await notifyAuthor(approved.id);
   redirect(approved ? `/chronicles/${approved.id}-${approved.slug}` : "/admin");
 }
 
@@ -53,10 +64,12 @@ export async function rejectChronicle(formData: FormData) {
   if (!id) return;
 
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000);
-  await db
+  const [rejected] = await db
     .update(chronicles)
     .set({ status: "rejected", rejectedAt: new Date(), rejectionReason: reason || null })
-    .where(and(eq(chronicles.id, id), eq(chronicles.status, "pending")));
+    .where(and(eq(chronicles.id, id), eq(chronicles.status, "pending")))
+    .returning({ id: chronicles.id });
 
+  if (rejected) await notifyAuthor(rejected.id);
   redirect("/admin");
 }

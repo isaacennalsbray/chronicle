@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { needsProfile, requireUser } from "@/lib/auth";
 import { chronicleCountsByCharacter } from "@/lib/profile";
+import { setEmailPreference } from "../email-preference/actions";
 import { AddCharacterForm, CharacterRow } from "./profile-editor";
 import { ProfileForm } from "./profile-form";
 
@@ -56,6 +57,20 @@ export default async function ProfilePage({ searchParams }: PageProps<"/profile"
       </section>
 
       <AddCharacterForm />
+
+      <section>
+        <h2 className="label">Email updates</h2>
+        <p className="text-sm text-muted">
+          {user.emailNotifications
+            ? `You're getting emails when your chronicles are approved or rejected${user.isAdmin ? ", and when chronicles are submitted for review" : ""}.`
+            : "You're not getting emails from the site."}
+        </p>
+        <form action={setEmailPreference} className="mt-2">
+          <button name="emails" value={user.emailNotifications ? "no" : "yes"} className="btn-secondary">
+            {user.emailNotifications ? "Turn off emails" : "Turn on emails"}
+          </button>
+        </form>
+      </section>
     </div>
   );
 }

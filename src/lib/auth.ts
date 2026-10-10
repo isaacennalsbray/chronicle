@@ -17,6 +17,8 @@ export type CurrentUser = {
   playerName: string | null;
   characters: string[];
   isAdmin: boolean;
+  // null until they've answered the email pop-up.
+  emailNotifications: boolean | null;
 };
 
 export async function startSession(userId: number) {
@@ -60,6 +62,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     playerName: user.playerName,
     characters: await getCharacters(user.id),
     isAdmin: isAdminEmail(user.email),
+    emailNotifications: user.emailNotifications,
   };
 });
 

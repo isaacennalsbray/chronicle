@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
+import { EmailPrompt } from "./email-preference/email-prompt";
 import { logout } from "./login/actions";
 import "./globals.css";
 
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
+        {user && user.emailNotifications === null && <EmailPrompt isAdmin={user.isAdmin} />}
         <footer className="border-t border-border">
           <div className="mx-auto max-w-3xl px-4 py-4 text-right text-xs">
             <Link href="/admin" className="text-muted hover:underline">Admin</Link>
