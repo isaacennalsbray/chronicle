@@ -129,3 +129,17 @@ export async function deleteSeason(_prev: AdminFormState, formData: FormData): P
   revalidatePath("/", "layout");
   redirect(league ? `/leagues/${league.slug}` : "/");
 }
+
+export async function updateSessionDescription(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireAdmin();
+  const sessionId = Number(formData.get("sessionId"));
+  if (!Number.isSafeInteger(sessionId) || sessionId <= 0) return { error: "Unknown session." };
+  const description = String(formData.get("description") ?? "").trim().slice(0, 10_000);
+
+  await db
+    .update(schema.sessions)
+    .set({ description: description || null })
+    .where(eq(schema.sessions.id, sessionId));
+  revalidatePath("/leagues/[league]/[season]", "page");
+  return { ok: true };
+}

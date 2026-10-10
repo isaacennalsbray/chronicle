@@ -90,6 +90,8 @@ export const sessions = pgTable(
       .references(() => seasons.id),
     inGameDate: text("in_game_date"), // e.g. "4th of Ninthmoon, 287.3.3"
     playedOn: date("played_on"), // real-world date, if known
+    // What happened that day, written by an admin; shown above the session's chronicles.
+    description: text("description"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
