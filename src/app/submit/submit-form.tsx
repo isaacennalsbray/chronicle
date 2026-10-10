@@ -12,6 +12,7 @@ export function SubmitForm({
   defaultSessionId,
   defaultYear,
   defaultPlayerName,
+  characters,
 }: {
   leagues: { id: number; name: string }[];
   sessions: SessionOption[];
@@ -19,6 +20,7 @@ export function SubmitForm({
   defaultSessionId: string;
   defaultYear: string;
   defaultPlayerName: string;
+  characters: string[];
 }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitChronicle, {});
   const v = state.values;
@@ -88,7 +90,20 @@ export function SubmitForm({
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="characterName" className="label">Character name</label>
-          <input id="characterName" name="characterName" required maxLength={100} defaultValue={v?.characterName} className="input" />
+          <input
+            id="characterName"
+            name="characterName"
+            required
+            maxLength={100}
+            list="my-characters"
+            defaultValue={v?.characterName ?? characters[0] ?? ""}
+            className="input"
+          />
+          <datalist id="my-characters">
+            {characters.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </div>
         <div>
           <label htmlFor="playerName" className="label">Player name</label>

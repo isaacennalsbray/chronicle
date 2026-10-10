@@ -1,21 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { needsProfile, requireUser } from "@/lib/auth";
 import { chronicleLabels, listChroniclesByAuthor, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 import { DismissButton } from "./dismiss-button";
 
 export const metadata: Metadata = { title: "My chronicles" };
 
-export default async function MyChroniclesPage() {
+export default async function MyChroniclesPage({ searchParams }: PageProps<"/me">) {
   const user = await requireUser();
+  if (needsProfile(user)) redirect("/profile?next=%2Fme");
+  const { linked } = await searchParams;
   const rows = await listChroniclesByAuthor(user.id);
   const labels = await chronicleLabels(rows.map((r) => r.chronicle));
 
   return (
     <div>
       <h1 className="font-serif text-3xl font-semibold">My chronicles</h1>
-      <p className="mt-1 text-sm text-muted">Logged in as {user.email}</p>
+      <p className="mt-1 text-sm text-muted">
+        {user.playerName} · {user.characters.join(", ")} ·{" "}
+        <Link href="/profile" className="link">Edit names</Link>
+      </p>
+      {typeof linked === "string" && Number(linked) > 0 && (
+        <p className="mt-4 rounded-md bg-surface px-4 py-3 text-sm">
+          {linked} chronicle{linked === "1" ? "" : "s"} from the old site {linked === "1" ? "is" : "are"} now linked to
+          your account.
+        </p>
+      )}
       {rows.length === 0 ? (
         <p className="mt-6">
           You haven&apos;t submitted any chronicles yet. <Link href="/submit" className="link">Submit one</Link>

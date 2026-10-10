@@ -9,14 +9,29 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
-  // Remembered from the last submission to prefill the form.
+  // The person's real name, asked for at first sign-in and used to prefill submissions.
   playerName: text("player_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// A person's character names. Together with users.player_name these link them to chronicles
+// imported from the old site, which were written before they had an account.
+export const userCharacters = pgTable(
+  "user_characters",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+  },
+  (t) => [uniqueIndex("user_characters_user_name_idx").on(t.userId, sql`lower(${t.name})`)],
+);
 
 export const loginCodes = pgTable(
   "login_codes",
