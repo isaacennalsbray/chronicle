@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { renderChroniclePdf, retitlePdf } from "@/lib/pdf";
@@ -22,7 +22,11 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
     const original = await fetch(chronicle.legacyFileUrl);
     if (!original.ok) notFound();
     const contentType = chronicle.legacyFileContentType ?? "application/octet-stream";
-    const extension = contentType.startsWith("image/jpeg") ? "jpg" : (contentType.split("/")[1] ?? "pdf");
+    const extension = contentType.startsWith("image/jpeg")
+      ? "jpg"
+      : contentType.startsWith("audio/mp4")
+        ? "m4a"
+        : (contentType.split("/")[1] ?? "pdf");
     let bytes: Uint8Array = new Uint8Array(await original.arrayBuffer());
     if (contentType.startsWith("application/pdf")) bytes = (await retitlePdf(bytes, fileBase)) ?? bytes;
     return new Response(Buffer.from(bytes), {
@@ -32,6 +36,12 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
         "Cache-Control": cacheControl,
       },
     });
+  }
+
+  // Videos and files that are no longer available have nothing to download: go to the link.
+  if (!chronicle.bodyText) {
+    if (chronicle.externalUrl) redirect(chronicle.externalUrl);
+    notFound();
   }
 
   const pdf = await renderChroniclePdf({

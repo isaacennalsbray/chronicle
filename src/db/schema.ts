@@ -132,6 +132,9 @@ export const chronicles = pgTable(
     legacyFileContentType: text("legacy_file_content_type"),
     // Original falnoriangames.com page/file, for future redirect mapping.
     legacySourceUrl: text("legacy_source_url"),
+    // For chronicles that live elsewhere: a YouTube video, or an original file that's no longer
+    // available (e.g. a deleted Google Drive link).
+    externalUrl: text("external_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

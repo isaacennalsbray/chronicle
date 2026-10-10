@@ -57,6 +57,13 @@
       "when": 1791669110873,
       "tag": "0007_session_description",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791670941793,
+      "tag": "0008_chronicle_external_url",
+      "breakpoints": true
     }
   ]
 }
