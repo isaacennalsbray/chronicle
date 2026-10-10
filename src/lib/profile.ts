@@ -61,11 +61,6 @@ export async function saveProfile(userId: number, playerName: string, characters
   return relinkImportedChronicles(userId);
 }
 
-export async function setPlayerName(userId: number, playerName: string) {
-  await db.update(users).set({ playerName }).where(eq(users.id, userId));
-  return relinkImportedChronicles(userId);
-}
-
 /** Adds a character (no-op if they already have it, ignoring case). */
 export async function addCharacter(userId: number, name: string) {
   await db.insert(userCharacters).values({ userId, name }).onConflictDoNothing();
