@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { NO_AUTOCORRECT } from "@/lib/no-autocorrect";
 import { type SubmitState, submitChronicle } from "./actions";
 
 // Matches NEW_CHARACTER in ./actions.
@@ -15,6 +16,7 @@ export function SubmitForm({
   defaultSessionId,
   defaultYear,
   characters,
+  isAdmin,
 }: {
   leagues: { id: number; name: string }[];
   sessions: SessionOption[];
@@ -22,11 +24,14 @@ export function SubmitForm({
   defaultSessionId: string;
   defaultYear: string;
   characters: string[];
+  isAdmin: boolean;
 }) {
   const [state, action, pending] = useActionState<SubmitState, FormData>(submitChronicle, {});
   const v = state.values;
   const [leagueId, setLeagueId] = useState(v?.leagueId ?? defaultLeagueId);
   const [character, setCharacter] = useState(v?.character ?? characters[0] ?? NEW_CHARACTER);
+  const [author, setAuthor] = useState(v?.author ?? "me");
+  const forSomeoneElse = isAdmin && author === "other";
 
   // Sessions of the chosen league, grouped by season.
   const groups = new Map<string, SessionOption[]>();
@@ -36,6 +41,24 @@ export function SubmitForm({
 
   return (
     <form action={action} className="mt-6 space-y-5">
+      {isAdmin && (
+        <fieldset>
+          <legend className="label">Written by</legend>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2">
+              <input type="radio" name="author" value="me" checked={author === "me"} onChange={() => setAuthor("me")} />
+              Me
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="radio" name="author" value="other" checked={author === "other"} onChange={() => setAuthor("other")} />
+              Someone else
+            </label>
+          </div>
+          {forSomeoneElse && (
+            <p className="mt-1 text-sm text-muted">It goes live straight away, without waiting for approval.</p>
+          )}
+        </fieldset>
+      )}
       <div>
         <label htmlFor="leagueId" className="label">League</label>
         <select
@@ -89,6 +112,34 @@ export function SubmitForm({
           />
         </div>
       </div>
+      {forSomeoneElse ? (
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="otherPlayer" className="label">Player&apos;s real name</label>
+            <input
+              id="otherPlayer"
+              name="otherPlayer"
+              required
+              maxLength={100}
+              defaultValue={v?.otherPlayer}
+              {...NO_AUTOCORRECT}
+              className="input"
+            />
+          </div>
+          <div>
+            <label htmlFor="otherCharacter" className="label">Character</label>
+            <input
+              id="otherCharacter"
+              name="otherCharacter"
+              required
+              maxLength={100}
+              defaultValue={v?.otherCharacter}
+              {...NO_AUTOCORRECT}
+              className="input"
+            />
+          </div>
+        </div>
+      ) : (
       <div className="space-y-2">
         <label htmlFor="character" className="label">Character</label>
         <select
@@ -117,12 +168,15 @@ export function SubmitForm({
           />
         )}
       </div>
+      )}
       <div>
         <label htmlFor="bodyText" className="label">Chronicle</label>
         <textarea id="bodyText" name="bodyText" required rows={18} defaultValue={v?.bodyText} className="input font-serif" />
       </div>
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-      <button className="btn" disabled={pending}>{pending ? "Submitting…" : "Submit for review"}</button>
+      <button className="btn" disabled={pending}>
+        {pending ? "Submitting…" : forSomeoneElse ? "Add chronicle" : "Submit for review"}
+      </button>
     </form>
   );
 }
