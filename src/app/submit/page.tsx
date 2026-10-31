@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { needsProfile, requireUser } from "@/lib/auth";
+import { OLD_CHRONICLES_LEAGUE } from "@/lib/old-chronicles";
 import { listLeagues, listSessionOptions, seasonTitle, sessionLabel } from "@/lib/queries";
 import { SubmitForm } from "./submit-form";
 
@@ -13,9 +14,10 @@ export default async function SubmitPage({ searchParams }: PageProps<"/submit">)
     const back = `/submit${typeof sessionParam === "string" ? `?session=${sessionParam}` : ""}`;
     redirect(`/profile?next=${encodeURIComponent(back)}`);
   }
-  const [leagues, options] = await Promise.all([listLeagues(), listSessionOptions()]);
+  const [allLeagues, options] = await Promise.all([listLeagues(), listSessionOptions()]);
+  const leagues = allLeagues.filter((l) => l.slug !== OLD_CHRONICLES_LEAGUE);
 
-  const sessions = options.map(({ session, season, league }) => ({
+  const sessions = options.filter(({ league }) => league.slug !== OLD_CHRONICLES_LEAGUE).map(({ session, season, league }) => ({
     id: session.id,
     leagueId: league.id,
     label: sessionLabel(session),

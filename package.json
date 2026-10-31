@@ -15,7 +15,8 @@
     "extract:legacy-text": "tsx scripts/extract-legacy-text.ts",
     "backfill:legacy-dates": "tsx scripts/backfill-legacy-event-dates.ts",
     "import:legacy-seasons": "tsx scripts/import-legacy-seasons.ts",
-    "import:legacy-media": "tsx scripts/import-legacy-media.ts"
+    "import:legacy-media": "tsx scripts/import-legacy-media.ts",
+    "import:old-chronicles": "tsx scripts/import-old-chronicles.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

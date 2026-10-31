@@ -1,8 +1,9 @@
 /**
- * Seeds the four leagues. Safe to re-run.
+ * Seeds the four leagues, plus Old Chronicles. Safe to re-run.
  *   npm run db:seed
  */
 import { config } from "dotenv";
+import { OLD_CHRONICLES_LEAGUE } from "../src/lib/old-chronicles";
 
 config({ path: ".env.local" });
 
@@ -11,6 +12,7 @@ export const LEAGUES = [
   { slug: "tessellations", name: "Tessellations", sortOrder: 2 },
   { slug: "sunday-larp", name: "Sunday LARP", sortOrder: 3 },
   { slug: "adult-league", name: "Adult League", sortOrder: 4 },
+  { slug: OLD_CHRONICLES_LEAGUE, name: "Old Chronicles", sortOrder: 5 },
 ];
 
 export async function seedLeagues() {
