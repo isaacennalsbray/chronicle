@@ -4,8 +4,8 @@
  *
  * - each entry ("Reflections by Gorn – By Gorn (Andrew) || Garemin, Ardel, 180.3.2") becomes an
  *   approved chronicle whose original file is copied to Vercel Blob;
- * - the place and year ("Garemin, Ardel, 180.3.2") is its session, in the order the old page
- *   lists them. The season it's about ("(S9)") isn't used: everything goes in the league's one
+ * - the place and year ("Garemin, Ardel, 180.3.2") is its session, oldest year first (see
+ *   byYear). The season it's about ("(S9)") isn't used: everything goes in the league's one
  *   season, so a place written about in two seasons is one session.
  *
  * Google Drive folders (the Season 1–9 collection, Marlo's notes) aren't single files, so they're
@@ -66,7 +66,26 @@ function parsePage(html: string): { sessions: ParsedSession[]; skipped: string[]
     session.entries.push({ title, characterName: character.trim() || "Chronicle", playerName: player.trim(), fileUrl });
   });
 
-  return { sessions, skipped };
+  return { sessions: byYear(sessions), skipped };
+}
+
+/**
+ * Oldest year first. A year like "194.1.3" reads from the last number: 180.3.2 < 130.1.3 <
+ * 194.1.3 < 278.1.3 < 269.3.3, which matches the seasons they're about (Earlier, S9, S10, S11,
+ * S13). A place with no year ("…, Timejump") stays right after the place before it on the old
+ * page. Places in the same year keep the old page's order.
+ */
+function byYear(sessions: ParsedSession[]): ParsedSession[] {
+  let previous = [0, 0, 0];
+  const keyed = sessions.map((session) => {
+    const m = /(\d+)\.(\d+)\.(\d+)/.exec(session.setting);
+    const key = m ? [Number(m[3]), Number(m[2]), Number(m[1])] : previous;
+    previous = key;
+    return { session, key };
+  });
+  const compare = (a: number[], b: number[]) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  // Array sort is stable, so equal years keep their order.
+  return keyed.sort((a, b) => compare(a.key, b.key)).map((k) => k.session);
 }
 
 async function main() {
