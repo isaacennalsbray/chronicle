@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Chronicle } from "@/db/schema";
+import { OLD_CHRONICLES_LEAGUE } from "./old-chronicles";
 
 const { leagues, seasons, sessions, chronicles } = schema;
 
@@ -142,7 +143,9 @@ export async function chronicleNumber(c: Pick<Chronicle, "id" | "sessionId" | "p
   return published.length > 1 && index >= 0 ? index + 1 : null;
 }
 
-export function seasonTitle(season: { label: string; codename: string | null }, league: { name: string }) {
+export function seasonTitle(season: { label: string; codename: string | null }, league: { name: string; slug: string }) {
+  // Old Chronicles has a single season with no name of its own.
+  if (league.slug === OLD_CHRONICLES_LEAGUE) return league.name;
   return season.codename
     ? `${season.codename} Chronicles (${season.label} ${league.name})`
     : `${league.name} ${season.label}`;

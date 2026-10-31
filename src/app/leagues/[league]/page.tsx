@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { OLD_CHRONICLES_LEAGUE, OLD_CHRONICLES_SEASON } from "@/lib/old-chronicles";
 import { listLeaguesWithSeasons, seasonTitle } from "@/lib/queries";
 
 async function load(slug: string) {
@@ -16,6 +17,8 @@ export default async function LeaguePage({ params }: PageProps<"/leagues/[league
   const entry = await load((await params).league);
   if (!entry) notFound();
   const { league, seasons } = entry;
+  // Old Chronicles is one page: go straight to its only season.
+  if (league.slug === OLD_CHRONICLES_LEAGUE) redirect(`/leagues/${league.slug}/${OLD_CHRONICLES_SEASON}`);
 
   return (
     <div>
