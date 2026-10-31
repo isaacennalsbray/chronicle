@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { OLD_CHRONICLES_LEAGUE } from "@/lib/old-chronicles";
 import { chronicleLabels, getSeason, getSeasonListing, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath } from "@/lib/slug";
 import { DeleteSeasonButton } from "./delete-season-button";
@@ -24,13 +25,20 @@ export default async function SeasonPage({ params }: Props) {
   const user = await getCurrentUser();
   const listing = await getSeasonListing(season.id, user?.id ?? null);
   const labels = await chronicleLabels(listing.flatMap((l) => l.chronicles));
+  // Old Chronicles is one read-only page: no league page above it and no submitting to it.
+  const isOldChronicles = league.slug === OLD_CHRONICLES_LEAGUE;
 
   return (
     <div>
-      <p className="text-sm text-muted">
-        <Link href={`/leagues/${league.slug}`} className="link">{league.name}</Link>
-      </p>
+      {!isOldChronicles && (
+        <p className="text-sm text-muted">
+          <Link href={`/leagues/${league.slug}`} className="link">{league.name}</Link>
+        </p>
+      )}
       <h1 className="mt-1 font-serif text-3xl font-semibold">{seasonTitle(season, league)}</h1>
+      {isOldChronicles && (
+        <p className="mt-2 text-muted">Chronicles written later by players about seasons long past.</p>
+      )}
       {user?.isAdmin && (
         <div className="mt-2">
           <DeleteSeasonButton seasonId={season.id} label={seasonTitle(season, league)} />
@@ -48,12 +56,14 @@ export default async function SeasonPage({ params }: Props) {
                 <h2 className="font-serif text-xl font-semibold">{sessionLabel(session)}</h2>
                 <div className="flex flex-wrap items-baseline gap-x-4">
                   {user?.isAdmin && <DeleteSessionButton sessionId={session.id} label={sessionLabel(session)} />}
-                  <Link
-                    href={user ? submitPath : `/login?next=${encodeURIComponent(submitPath)}`}
-                    className="link text-sm"
-                  >
-                    {user ? "Submit a chronicle" : "Log in to submit"}
-                  </Link>
+                  {!isOldChronicles && (
+                    <Link
+                      href={user ? submitPath : `/login?next=${encodeURIComponent(submitPath)}`}
+                      className="link text-sm"
+                    >
+                      {user ? "Submit a chronicle" : "Log in to submit"}
+                    </Link>
+                  )}
                 </div>
               </div>
               <SessionDescription

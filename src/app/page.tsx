@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OLD_CHRONICLES_LEAGUE } from "@/lib/old-chronicles";
 import { listLeaguesWithSeasons, seasonTitle } from "@/lib/queries";
 
 export default async function Home() {
@@ -19,7 +20,9 @@ export default async function Home() {
             <h2 className="font-serif text-xl font-semibold">
               <Link href={`/leagues/${league.slug}`} className="hover:underline">{league.name}</Link>
             </h2>
-            {seasons.length === 0 ? (
+            {league.slug === OLD_CHRONICLES_LEAGUE ? (
+              <p className="mt-2 text-sm text-muted">Chronicles written later about seasons long past.</p>
+            ) : seasons.length === 0 ? (
               <p className="mt-2 text-sm text-muted">No seasons yet.</p>
             ) : (
               <ul className="mt-2 space-y-1 text-sm">
