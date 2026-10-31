@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { NO_AUTOCORRECT } from "@/lib/no-autocorrect";
 import { type AdminFormState, createSeason, createSession } from "./actions";
 
 function Status({ state, success }: { state: AdminFormState; success: string }) {
@@ -22,11 +23,11 @@ export function NewSessionForm({ seasons }: { seasons: { id: number; label: stri
       </div>
       <div>
         <label htmlFor="inGameDate" className="label">In-game date</label>
-        <input id="inGameDate" name="inGameDate" required placeholder="9th of Tenthmoon, 287.3.3" className="input" />
+        <input id="inGameDate" name="inGameDate" required placeholder="9th of Tenthmoon, 287.3.3" {...NO_AUTOCORRECT} className="input" />
       </div>
       <div>
         <label htmlFor="playedOn" className="label">Played on (optional)</label>
-        <input id="playedOn" name="playedOn" inputMode="numeric" placeholder="month/day/year" className="input" />
+        <input id="playedOn" name="playedOn" inputMode="numeric" placeholder="month/day/year" {...NO_AUTOCORRECT} className="input" />
       </div>
       <div className="flex items-center gap-4 sm:col-span-3">
         <button className="btn" disabled={pending}>Add session</button>
@@ -49,11 +50,11 @@ export function NewSeasonForm({ leagues }: { leagues: { id: number; name: string
       </div>
       <div>
         <label htmlFor="label" className="label">Season</label>
-        <input id="label" name="label" required placeholder="S15" className="input" />
+        <input id="label" name="label" required placeholder="S15" {...NO_AUTOCORRECT} className="input" />
       </div>
       <div>
         <label htmlFor="codename" className="label">Codename (optional)</label>
-        <input id="codename" name="codename" placeholder="Eldar" className="input" />
+        <input id="codename" name="codename" placeholder="Eldar" {...NO_AUTOCORRECT} className="input" />
       </div>
       <div className="flex items-center gap-4 sm:col-span-3">
         <button className="btn" disabled={pending}>Add season</button>

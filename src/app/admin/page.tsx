@@ -44,6 +44,14 @@ export default async function AdminPage() {
       </section>
 
       <section>
+        <h2 className="font-serif text-2xl font-semibold">Add someone else&apos;s chronicle</h2>
+        <p className="mt-1 text-sm text-muted">
+          For chronicles sent to you another way. On the{" "}
+          <Link href="/submit" className="link">submit page</Link>, choose &ldquo;Written by: Someone else&rdquo;.
+        </p>
+      </section>
+
+      <section>
         <h2 className="font-serif text-2xl font-semibold">Add a session</h2>
         <p className="mt-1 text-sm text-muted">
           Players pick from these sessions when submitting.

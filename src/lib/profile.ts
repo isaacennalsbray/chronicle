@@ -24,32 +24,49 @@ export async function chronicleCountsByCharacter(userId: number): Promise<Map<st
 }
 
 /**
- * Links every imported chronicle with the person's real name and one of their characters to
- * them, and unlinks imported ones that no longer match. Imported chronicles already linked to
- * someone else are left alone. Returns how many imported chronicles are now theirs.
+ * Links every unclaimed chronicle (imported, or added by an admin for someone else) with the
+ * person's real name and one of their characters to them, and unlinks imported ones that no
+ * longer match. Chronicles already linked to someone else are left alone. Returns how many
+ * imported chronicles are now theirs.
  */
 async function relinkImportedChronicles(userId: number) {
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   const playerName = user?.playerName?.trim().toLowerCase() ?? "";
   const lowered = (await getCharacters(userId)).map((c) => c.trim().toLowerCase());
 
-  const matches = and(
-    isNotNull(chronicles.legacySourceUrl),
+  const namesMatch = and(
     sql`lower(trim(${chronicles.playerName})) = ${playerName}`,
     lowered.length > 0 ? inArray(sql`lower(trim(${chronicles.characterName}))`, lowered) : sql`false`,
   )!;
+  const matches = and(isNotNull(chronicles.legacySourceUrl), namesMatch)!;
 
   await db
     .update(chronicles)
     .set({ authorUserId: null })
     .where(and(eq(chronicles.authorUserId, userId), isNotNull(chronicles.legacySourceUrl), not(matches)));
-  await db.update(chronicles).set({ authorUserId: userId }).where(and(isNull(chronicles.authorUserId), matches));
+  await db.update(chronicles).set({ authorUserId: userId }).where(and(isNull(chronicles.authorUserId), namesMatch));
 
   const [{ n }] = await db
     .select({ n: count() })
     .from(chronicles)
     .where(and(eq(chronicles.authorUserId, userId), isNotNull(chronicles.legacySourceUrl)));
   return n;
+}
+
+/** The account with this real name and character (ignoring case), or null if there isn't one. */
+export async function findUserByNames(playerName: string, characterName: string): Promise<number | null> {
+  const [match] = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(userCharacters, eq(userCharacters.userId, users.id))
+    .where(
+      and(
+        sql`lower(trim(${users.playerName})) = ${playerName.trim().toLowerCase()}`,
+        sql`lower(trim(${userCharacters.name})) = ${characterName.trim().toLowerCase()}`,
+      ),
+    )
+    .limit(1);
+  return match?.id ?? null;
 }
 
 /** First-time setup: real name plus one or more characters. */

@@ -36,6 +36,7 @@ export default async function SubmitPage({ searchParams }: PageProps<"/submit">)
         defaultSessionId={preselected ? String(preselected.id) : ""}
         defaultYear={String(new Date().getFullYear())}
         characters={user.characters}
+        isAdmin={user.isAdmin}
       />
     </div>
   );
