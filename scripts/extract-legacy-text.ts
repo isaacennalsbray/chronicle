@@ -150,6 +150,24 @@ function paragraphs(lines: Line[], wobbly = false): string[] {
   return out.filter(Boolean);
 }
 
+const SHORT_WORDS = new Set("a i an as at be by do go he if in is it me my no of on or so to up us we oh ok am ah ha hi ye ya yo".split(" "));
+const COMMON_WORDS = new Set(
+  "the and to of a i we was in it that you my is for on with as but they he she had were be at this so me our have not all there his her them then from what when one up out about just by an are or if into no would could which some their after did us like went more back time also day".split(" "),
+);
+
+/**
+ * Some PDFs use fonts that don't record which letter each shape is, so their text comes out as
+ * gibberish ("WH PHW ZLWK") or with letters dropped ("to us to be wa of te"). Real writing is
+ * full of common words and has few stray one- or two-letter fragments.
+ */
+function readable(text: string): boolean {
+  const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
+  if (words.length < 20) return true;
+  const common = words.filter((w) => COMMON_WORDS.has(w)).length / words.length;
+  const fragments = words.filter((w) => w.length <= 2 && !SHORT_WORDS.has(w)).length / words.length;
+  return common >= 0.1 && fragments <= 0.15;
+}
+
 async function extract(url: string): Promise<string> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`GET ${url} → ${res.status}`);
@@ -193,6 +211,12 @@ async function main() {
     const body = await extract(row.url!);
     if (!body) {
       console.log(`  no text found: #${row.id} ${row.title}`);
+      continue;
+    }
+    if (!readable(body)) {
+      // The page shows the original PDF instead; clear any earlier garbled text.
+      console.log(`  unreadable text (broken font), showing the PDF: #${row.id} ${row.title}`);
+      if (!dryRun) await db.update(chronicles).set({ bodyText: null }).where(eq(chronicles.id, row.id));
       continue;
     }
     if (dryRun) {
