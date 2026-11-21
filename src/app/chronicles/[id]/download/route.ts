@@ -1,18 +1,22 @@
 import { notFound, redirect } from "next/navigation";
-import { canView } from "@/lib/access";
+import { canDownload, canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { renderChroniclePdf, retitlePdf } from "@/lib/pdf";
 import { byline, chroniclePdfTitle, getChronicleById } from "@/lib/queries";
-import { parseChronicleId } from "@/lib/slug";
+import { chroniclePath, parseChronicleId } from "@/lib/slug";
 
 export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/download">) {
   const id = parseChronicleId((await ctx.params).id);
   const row = id ? await getChronicleById(id) : null;
-  if (!row || !canView(row.chronicle, await getCurrentUser())) notFound();
+  const user = await getCurrentUser();
+  if (!row || !canView(row.chronicle, user)) notFound();
   const { chronicle, session } = row;
+  // Files need a login (see canDownload). Send visitors to log in, then back to the chronicle.
+  if (!canDownload(chronicle, user)) redirect(`/login?next=${encodeURIComponent(chroniclePath(chronicle))}`);
 
   const fileBase = await chroniclePdfTitle(chronicle, session);
-  const cacheControl = chronicle.status === "approved" ? "public, max-age=300" : "private, no-store";
+  // Only for this logged-in browser: shared caches (like Vercel's CDN) must not hand it to anyone else.
+  const cacheControl = chronicle.status === "approved" ? "private, max-age=3600" : "private, no-store";
   // ?inline=1 shows the file in the browser (the on-page viewer) instead of downloading it.
   const disposition = new URL(req.url).searchParams.get("inline") === "1" ? "inline" : "attachment";
 
@@ -34,6 +38,7 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
         "Content-Type": contentType,
         "Content-Disposition": `${disposition}; filename="${fileBase}.${extension}"`,
         "Cache-Control": cacheControl,
+      "X-Robots-Tag": "noindex",
       },
     });
   }
@@ -55,6 +60,7 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
       "Content-Type": "application/pdf",
       "Content-Disposition": `${disposition}; filename="${fileBase}.pdf"`,
       "Cache-Control": cacheControl,
+      "X-Robots-Tag": "noindex",
     },
   });
 }
