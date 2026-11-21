@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { canView } from "@/lib/access";
+import { canDownload, canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
 import { chronicleLabels, chroniclePdfTitle, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
@@ -39,6 +39,9 @@ export default async function ChroniclePage({ params }: Props) {
   const hasFile = Boolean(chronicle.legacyFileUrl || chronicle.bodyText);
   const pdfTitle = await chroniclePdfTitle(chronicle, session);
   const pending = chronicle.status === "pending";
+  // Files need a login; logged-out visitors get a link to log in and come back here.
+  const mayDownload = canDownload(chronicle, user);
+  const loginPath = `/login?next=${encodeURIComponent(canonical)}`;
   const rejected = chronicle.status === "rejected";
 
   return (
@@ -70,8 +73,8 @@ export default async function ChroniclePage({ params }: Props) {
 
       <div className="mt-6 flex flex-wrap gap-3">
         {hasFile && (
-          <a href={`${canonical}/download`} className="btn">
-            Download {isLegacyImage ? "image" : isAudio ? "audio" : "PDF"}
+          <a href={mayDownload ? `${canonical}/download` : loginPath} className="btn" rel="nofollow">
+            {mayDownload ? "Download" : "Log in to download"} {isLegacyImage ? "image" : isAudio ? "audio" : "PDF"}
           </a>
         )}
         {youtubeId && (
@@ -93,9 +96,17 @@ export default async function ChroniclePage({ params }: Props) {
             otherwise the original scan. */}
         {chronicle.bodyText ? (
           <div className="whitespace-pre-wrap font-serif text-lg leading-relaxed">{chronicle.bodyText}</div>
+        ) : chronicle.legacyFileUrl && !mayDownload ? (
+          <p className="rounded-md bg-surface px-4 py-3 text-sm">
+            This chronicle is an original {isLegacyImage ? "scan" : isAudio ? "recording" : "PDF"}.{" "}
+            <Link href={loginPath} className="link" rel="nofollow">
+              Log in
+            </Link>{" "}
+            to see it.
+          </p>
         ) : isLegacyImage ? (
           // eslint-disable-next-line @next/next/no-img-element -- original scanned chronicle, shown as-is
-          <img src={chronicle.legacyFileUrl!} alt={`${label}, by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
+          <img src={`${canonical}/download?inline=1`} alt={`${label}, by ${chronicle.playerName}`} className="w-full rounded-md border border-border" />
         ) : isAudio ? (
           <audio controls preload="metadata" src={`${canonical}/download?inline=1`} className="w-full">
             <a href={`${canonical}/download`}>Download the recording</a>
