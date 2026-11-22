@@ -30,16 +30,15 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
   // Imported chronicles: serve the original file under the common name. PDFs also get their
   // stored title (e.g. "Copy of Halimin") replaced with it; content is unchanged.
   if (chronicle.legacyFileUrl) {
+    // Ask for the size first: a HEAD request returns only the headers, so a refused download costs
+    // nothing. (If the size is ever missing, count it as big as our largest file.)
+    const head = await fetch(chronicle.legacyFileUrl, { method: "HEAD" });
+    if (!head.ok) notFound();
+    const size = Number(head.headers.get("content-length")) || 60_000_000;
+    const hit = await claimDownload(user!.id, chronicle.id, size);
+    if (hit) return limitReached(hit);
     const original = await fetch(chronicle.legacyFileUrl);
     if (!original.ok) notFound();
-    // The size arrives in the headers before the file itself, so a refused download costs almost nothing.
-    // (If it's ever missing, count it as big as our largest file.)
-    const size = Number(original.headers.get("content-length")) || 60_000_000;
-    const hit = await claimDownload(user!.id, chronicle.id, size);
-    if (hit) {
-      await original.body?.cancel();
-      return limitReached(hit);
-    }
     const contentType = chronicle.legacyFileContentType ?? "application/octet-stream";
     const extension = contentType.startsWith("image/jpeg")
       ? "jpg"
