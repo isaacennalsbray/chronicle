@@ -146,3 +146,19 @@ export const chronicles = pgTable(
 );
 
 export type Chronicle = typeof chronicles.$inferSelect;
+
+// Every file download (original files and PDFs), so we can cap how much is downloaded each day:
+// each download costs data transfer on Vercel's free plan. See src/lib/download-limits.ts.
+export const downloads = pgTable(
+  "downloads",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    chronicleId: integer("chronicle_id").references(() => chronicles.id, { onDelete: "set null" }),
+    bytes: integer("bytes").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("downloads_created_idx").on(t.createdAt), index("downloads_user_idx").on(t.userId, t.createdAt)],
+);

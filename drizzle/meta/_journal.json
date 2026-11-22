@@ -64,6 +64,13 @@
       "when": 1791670941793,
       "tag": "0008_chronicle_external_url",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795369172203,
+      "tag": "0009_downloads",
+      "breakpoints": true
     }
   ]
 }
