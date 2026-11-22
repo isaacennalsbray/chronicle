@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { canDownload, canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
+import { claimDownload, LIMIT_MESSAGES, LimitHit } from "@/lib/download-limits";
 import { renderChroniclePdf, retitlePdf } from "@/lib/pdf";
 import { byline, chroniclePdfTitle, getChronicleById } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
@@ -19,12 +20,26 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
   const cacheControl = chronicle.status === "approved" ? "private, max-age=3600" : "private, no-store";
   // ?inline=1 shows the file in the browser (the on-page viewer) instead of downloading it.
   const disposition = new URL(req.url).searchParams.get("inline") === "1" ? "inline" : "attachment";
+  // Over a daily limit: the on-page viewer shows the message; a download link goes back to the page,
+  // which shows it too.
+  const limitReached = (hit: LimitHit) =>
+    disposition === "inline"
+      ? new Response(LIMIT_MESSAGES[hit], { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8" } })
+      : redirect(`${chroniclePath(chronicle)}?limit=${hit}`);
 
   // Imported chronicles: serve the original file under the common name. PDFs also get their
   // stored title (e.g. "Copy of Halimin") replaced with it; content is unchanged.
   if (chronicle.legacyFileUrl) {
     const original = await fetch(chronicle.legacyFileUrl);
     if (!original.ok) notFound();
+    // The size arrives in the headers before the file itself, so a refused download costs almost nothing.
+    // (If it's ever missing, count it as big as our largest file.)
+    const size = Number(original.headers.get("content-length")) || 60_000_000;
+    const hit = await claimDownload(user!.id, chronicle.id, size);
+    if (hit) {
+      await original.body?.cancel();
+      return limitReached(hit);
+    }
     const contentType = chronicle.legacyFileContentType ?? "application/octet-stream";
     const extension = contentType.startsWith("image/jpeg")
       ? "jpg"
@@ -38,7 +53,7 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
         "Content-Type": contentType,
         "Content-Disposition": `${disposition}; filename="${fileBase}.${extension}"`,
         "Cache-Control": cacheControl,
-      "X-Robots-Tag": "noindex",
+        "X-Robots-Tag": "noindex",
       },
     });
   }
@@ -54,6 +69,8 @@ export async function GET(req: Request, ctx: RouteContext<"/chronicles/[id]/down
     byline: byline(chronicle),
     body: chronicle.bodyText ?? "",
   });
+  const hit = await claimDownload(user!.id, chronicle.id, pdf.length);
+  if (hit) return limitReached(hit);
 
   return new Response(Buffer.from(pdf), {
     headers: {

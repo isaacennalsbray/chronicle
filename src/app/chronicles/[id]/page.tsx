@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { canDownload, canView } from "@/lib/access";
 import { getCurrentUser } from "@/lib/auth";
+import { LIMIT_MESSAGES } from "@/lib/download-limits";
 import { chronicleLabels, chroniclePdfTitle, getChronicleById, seasonTitle, sessionLabel } from "@/lib/queries";
 import { chroniclePath, parseChronicleId } from "@/lib/slug";
 import { DeleteButton } from "./delete-button";
@@ -24,8 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: row?.label };
 }
 
-export default async function ChroniclePage({ params }: Props) {
+export default async function ChroniclePage({ params, searchParams }: Props) {
   const { id: param } = await params;
+  // Set when a download was refused for being over a daily limit (see the download route).
+  const { limit } = await searchParams;
+  const limitMessage = limit === "account" || limit === "site" ? LIMIT_MESSAGES[limit] : null;
   const row = await load(param);
   if (!row) notFound();
   const { chronicle, session, season, league, user, label } = row;
@@ -70,6 +74,8 @@ export default async function ChroniclePage({ params }: Props) {
         · {sessionLabel(session)}
       </p>
       <h1 className="mt-2 font-serif text-4xl font-semibold">{label}</h1>
+
+      {limitMessage && <p className="mt-6 rounded-md bg-warning-bg px-4 py-3 text-sm text-warning-fg">{limitMessage}</p>}
 
       <div className="mt-6 flex flex-wrap gap-3">
         {hasFile && (
